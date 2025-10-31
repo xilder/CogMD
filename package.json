@@ -1,0 +1,21 @@
+{
+  "name": "cogmd",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install:frontend": "cd client && npm i",
+    "install:backend": "cd server && uv env && uv pip install .",
+    "install": "npm run install:frontend && npm run install:backend",
+    "build:frontend": "cd client && npm run build",
+    "build:backend": "cd server && uv run python -c \"print('Backend build complete')\"",
+    "build": "npm run build:frontend && npm run build:backend",
+    "dev:frontend": "cd client && npm run dev",
+    "dev:backend": "cd server && uv run uvicorn app:app --reload --port 8000",
+    "dev": "concurrently \"npm:dev:backend\" \"npm:dev:frontend\"" 
+  }
+}
