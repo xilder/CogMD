@@ -1,10 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import QueryProvider from '@/components/query-provider';
+import ModalContextProvider from '@/context/info-modal';
 import { Analytics } from '@vercel/analytics/next';
+import dotenv from 'dotenv';
 import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
 import type React from 'react';
 import './globals.css';
 
+dotenv.config();
 const montserrat = Montserrat({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -14,8 +17,6 @@ export const metadata: Metadata = {
   generator: 'v0.app',
 };
 
-const queryClient = new QueryClient();
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,12 +24,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <QueryClientProvider client={queryClient}>
-        <body className={`${montserrat.className} font-sans antialiased`}>
-          {children}
-          <Analytics />
-        </body>
-      </QueryClientProvider>
+      <body className={`${montserrat.className} font-sans antialiased`}>
+        <ModalContextProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </ModalContextProvider>
+        <Analytics />
+      </body>
     </html>
   );
 }

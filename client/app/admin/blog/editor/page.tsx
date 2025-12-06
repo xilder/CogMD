@@ -64,10 +64,10 @@ export default function BlogEditorPage() {
 
         <div>
           <label className="text-sm font-medium text-foreground">Status</label>
-          <Select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-2">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-2">
             <option value="draft">Draft</option>
             <option value="published">Published</option>
-          </Select>
+          </select>
         </div>
 
         <div className="flex gap-4">

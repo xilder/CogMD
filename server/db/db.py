@@ -19,8 +19,6 @@ async def get_supabase_client() -> AsyncClient:
         result = await supabase.from_('user').select('*').execute()
     
     # If the execution succeeds, the connection is considered alive
-        if result is APIResponse and result.data and result.data[0] is not None:
-            print(supabase)
     
     except Exception as e:
         print(f"❌ Supabase connection failed: {e}")

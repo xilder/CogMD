@@ -15,12 +15,12 @@ const features = [
   {
     icon: BarChart3,
     title: "Progress Tracking",
-    description: "Real-time analytics to monitor your learning journey and identify weak areas",
+    description: "Real-time analytics to monitor your learning journey", // and identify weak areas
   },
   {
     icon: Clock,
     title: "Flexible Learning",
-    description: "Study at your own pace with bite-sized lessons and practice questions",
+    description: "Study at your own pace with practice questions", // bite-sized lessons and 
   },
   {
     icon: Users,

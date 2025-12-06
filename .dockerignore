@@ -1,0 +1,35 @@
+Git
+
+.git
+
+Docker
+
+Dockerfile
+.dockerignore
+
+Python
+
+server/.venv
+server/.cogMD
+server/__pycache__
+server/*.pyc
+
+Node.js
+
+client/node_modules
+client/npm-debug.log
+
+Next.js build artifacts
+
+client/.next
+client/build
+
+Env files (NEVER copy these into an image)
+
+.env
+.env.*
+client/.env
+client/.env.*
+server/.env
+server/.env.*
+server/*.json

@@ -1,19 +1,28 @@
 # app/api/auth_router.py
+from os import access
+from pprint import pprint
 from typing import Annotated, Any, cast
 
-from db.db import get_supabase_client
 from fastapi import (
     APIRouter,
+    Cookie,
     Depends,
     HTTPException,
     Request,
     Response,
     status,
 )
+from fastapi.responses import RedirectResponse
 from gotrue.errors import AuthApiError
+from jose import JWTError, jwt
+from postgrest import APIResponse
+from supabase import AsyncClient
+
+from server.core.config import settings
+from server.db.db import get_supabase_client
 
 # Import our new, specific schemas and dependencies
-from models.schemas import (
+from server.models.schemas import (
     LoginResponse,
     OAuthCallback,
     Token,
@@ -21,23 +30,35 @@ from models.schemas import (
     UserCreate,
     UserLogin,
 )
-from postgrest import APIResponse
-from supabase import AsyncClient
 
 # Initialize the router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 # --- Helper function to set the secure cookie ---
-def set_refresh_token_cookie(response: Response, token: str) -> None:
+def set_refresh_token_cookie(response: Response, token: str | None) -> None:
     """Sets the refresh token in a secure, HttpOnly cookie."""
     response.set_cookie(
         key="cognito_refresh_token",
         value=token,
         httponly=True,
         samesite="lax",
-        secure=True,  # Should be True in production (HTTPS)
+        secure=False,
         path="/",
+        max_age=60 * 60 * 24 * 30,
+    )
+
+
+def remove_refresh_token_cookie(response: Response) -> None:
+    """
+    Removes the refresh token cookie.
+    """
+    response.delete_cookie(
+        key="cognito_refresh_token",
+        path="/",
+        secure=False,
+        httponly=True,
+        samesite="lax",
     )
 
 
@@ -45,6 +66,7 @@ def set_refresh_token_cookie(response: Response, token: str) -> None:
 async def register_user(
     user_credentials: UserCreate,
     supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    response: Response,
 ):
     """
     Handles new user registration via email and password.
@@ -52,7 +74,7 @@ async def register_user(
     2. Creates a corresponding public profile in 'user' table.
     """
     try:
-        # Step 1: Securely sign up the user via Supabase Auth
+        # Securely sign up the user via Supabase Auth
         auth_response = await supabase.auth.sign_up(
             {"email": user_credentials.email, "password": user_credentials.password}
         )
@@ -70,24 +92,24 @@ async def register_user(
             "id": str(user_id),
             "username": user_credentials.username,
             "full_name": user_credentials.full_name,
+            "email": user_credentials.email,
         }
 
         # Insert the profile and immediately select it back to return to the user
         _profile_response = await supabase.table("user").insert(profile_data).execute()
         profile_response = cast(APIResponse, _profile_response)
 
-        # The email is not stored in our public table, so we add it from the auth response for the return object
         response_data = cast(dict[str, Any], profile_response.data[0])
         response_data["email"] = auth_response.user.email
 
         return response_data
 
     except AuthApiError as e:
-        # This catches specific Supabase errors, like "User already registered"
+        remove_refresh_token_cookie(response)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 async def login_for_access_token(
     response: Response,
     form_data: UserLogin,
@@ -100,7 +122,6 @@ async def login_for_access_token(
     3. Returns JWT access and refresh tokens.
     """
     try:
-        # Note: The 'username' field from the form is used as the email.
         auth_response = await supabase.auth.sign_in_with_password(
             {"email": form_data.username, "password": form_data.password}
         )
@@ -118,7 +139,7 @@ async def login_for_access_token(
         # Fetch the public profile to return alongside the token
         profile_response = (
             await supabase.table("user")
-            .select("id, username, plan, xp_points")
+            .select("id, full_name, username, plan, xp_points")
             .eq("id", str(user.id))
             .single()
             .execute()
@@ -134,43 +155,44 @@ async def login_for_access_token(
         ).execute()
 
         user_profile = cast(UserAuthResponse, profile_response.data)
-        user_profile.email = cast(str, user.email)
+        user_profile["email"] = cast(str, user.email)
 
         return LoginResponse(
             access_token=auth_response.session.access_token,
-            user=UserAuthResponse(**user_profile.model_dump()),
+            user=user_profile,
         )
 
-    except AuthApiError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
+    except Exception as e:
+        remove_refresh_token_cookie(response)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.get("/google/login")
-async def google_login(
-    request: Request, supabase: Annotated[AsyncClient, Depends(get_supabase_client)]
-):
-    """
-    Generates the Google OAuth sign-in URL for the frontend to redirect to.
-    This initiates the secure PKCE flow.
-    """
-    try:
-        # This automatically handles the secure PKCE code_challenge
-        data, error = await supabase.auth.sign_in_with_oauth(
-            {
-                "provider": "google",
-                "options": {"redirect_to": "http://localhost:3000/auth/callback"},
-            }
-        )
-        if error:
-            raise HTTPException(
-                status_code=500, detail=f"Error generating OAuth URL: {error[0]}"
-            )
-
-        return {"url": data[0]}
-    except AuthApiError as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error generating OAuth URL: {e.message}"
-        )
+# @router.get("/google/login")
+# async def google_login(
+#     request: Request,
+#     supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+#     response: Response,
+# ):
+#     """
+#     Generates the Google OAuth sign-in URL for the frontend to redirect to.
+#     This initiates the secure PKCE flow.
+#     """
+#     try:
+#         # This automatically handles the secure PKCE code_challenge
+#         data = await supabase.auth.sign_in_with_oauth(
+#             {
+#                 "provider": "google",
+#                 "options": {"redirect_to": "http://localhost:3000/callback"},
+#             }
+#         )
+#         print(data.url)
+#         return {"url": data.url}
+#     except AuthApiError as e:
+#         print(e)
+#         remove_refresh_token_cookie(response)
+#         raise HTTPException(
+#             status_code=500, detail=f"Error generating OAuth URL: {e.message}"
+#         )
 
 
 @router.post("/google/callback", response_model=Token)
@@ -191,46 +213,55 @@ async def google_callback(
             {
                 "auth_code": callback_data.code,
                 "code_verifier": callback_data.code_verifier,
-                "redirect_to": "http://localhost:3000/auth/callback",
+                "redirect_to": "http://localhost:3000/callback",
             }
         )
 
-        if not session_response.user or not session_response.session:
+        json_data = session_response.json()
+
+        user = json_data.get("user", None)
+
+        if not user:
             raise HTTPException(status_code=401, detail="Could not log in with Google.")
 
-        user = session_response.user
-
-        # "Upsert" logic to create a profile if one doesn't exist
         profile_data = {
-            "id": str(user.id),
-            "full_name": user.user_metadata.get("full_name"),
-            "avatar_url": user.user_metadata.get("avatar_url"),
-            "username": user.user_metadata.get("email", "").split("@"),
+            "id": user.get("id"),
+            "full_name": user.get("user_metadata", None).get("full_name"),
+            "avatar_url": user.get("user_metadata", None).get("avatar_url"),
+            "username": user.get("user_metadata", None).get("email", "").split("@")[0],
+            "email": user.get("user_metadata", None).get("email", ""),
+            "last_login": "now()"
         }
         profile_response = await supabase.table("user").upsert(profile_data).execute()
 
-        await supabase.table("user").update({"last_login": "now()"}).eq(
-            "id", str(user.id)
-        ).execute()
+        # await supabase.table("user").update({"last_login": "now()"}).eq(
+        #     "id", str(user.get('id'))
+        # ).execute()
 
-        set_refresh_token_cookie(response, session_response.session.refresh_token)
+        refresh_token = json_data.get("refresh_token")
+        access_token = json_data.get("access_token")
 
-        user_profile = cast(UserAuthResponse, profile_response.data)
-        user_profile.email = cast(str, user.email)
+        set_refresh_token_cookie(response, refresh_token)
+
+        user_profile = cast(UserAuthResponse, profile_response.data[0])
+        print(refresh_token, access_token)
 
         return LoginResponse(
-            access_token=session_response.session.access_token,
-            user=UserAuthResponse(**user_profile.model_dump()),
+            access_token=access_token,
+            user=user_profile,
         )
 
     except AuthApiError as e:
+        remove_refresh_token_cookie(response)
         raise HTTPException(
             status_code=400, detail=f"OAuth callback error: {e.message}"
         )
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(supabase: Annotated[AsyncClient, Depends(get_supabase_client)]):
+async def logout(
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)], response: Response
+):
     """
     Logs out the current user by invalidating their session on Supabase.
     The supabase-python client needs to be authenticated for this to work,
@@ -238,5 +269,57 @@ async def logout(supabase: Annotated[AsyncClient, Depends(get_supabase_client)])
     """
     try:
         await supabase.auth.sign_out()
+        set_refresh_token_cookie(response, None)
     except AuthApiError as e:
+        remove_refresh_token_cookie(response)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+
+
+@router.post("/refresh-token", response_model=Token)
+async def refresh_access_token(
+    response: Response,
+    request: Request,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    cognito_refresh_token=Cookie(None, alias="cognito_refresh_token"),
+):
+    """
+    Gets a new access token by validating the refresh token from the HttpOnly cookie.
+    This allows the user's session to be extended without requiring them to log in again.
+    """
+    if cognito_refresh_token is None:
+        await supabase.auth.sign_out()
+
+    authorisation = request.headers.get("authorization", None)
+
+    if authorisation is not None:
+        token = authorisation.split()[1]
+        try:
+            payload = jwt.decode(
+                token,
+                settings.SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+            if payload:
+                return {"access_token": token}
+        except JWTError:
+            pass
+
+    try:
+        refresh_response = await supabase.auth.refresh_session(cognito_refresh_token)
+
+        if not refresh_response.session:
+            set_refresh_token_cookie(response, None)
+            await supabase.auth.sign_out()
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token.",
+            )
+
+        set_refresh_token_cookie(response, refresh_response.session.refresh_token)
+
+        return {"access_token": refresh_response.session.access_token}
+
+    except AuthApiError:
+        remove_refresh_token_cookie(response)
+        await supabase.auth.sign_out()

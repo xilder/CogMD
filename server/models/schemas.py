@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -70,6 +71,28 @@ class Question(BaseModel):
         from_attributes = True
 
 
+class QuizOption(BaseModel):
+    id: str
+    option_text: str
+
+
+class QuizQuestion(BaseModel):
+    id: str
+    question_text: str
+    type: Literal[
+        "new",
+        "review",
+    ]
+    options: list[QuizOption]
+    hint: str | None = None
+    answer: str | None = None
+    explanation: str | None = None
+    option_picked_id: str | None = None
+    correct_option: str | None = None
+    is_correct: bool | None = None
+    time_to_answer_ms: int | None = 0
+
+
 # --- Core Progress & Session Models ---
 
 
@@ -125,24 +148,23 @@ class UserAuthResponse(BaseModel):
     """Schema for returning essential user info after authentication."""
 
     id: uuid.UUID
-    username: str | None
+    username: str
+    full_name: str
     email: EmailStr
-    plan: str
-    xp_points: int
+    plan: str = 'free'
+    xp_points: int | None
 
 
 class Token(BaseModel):
-    """Schema for returning JWT access and refresh tokens."""
+    """Schema for returning JWT access tokens."""
 
     access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
 
 
 class TokenData(BaseModel):
     """Schema for data decoded from a JWT, used in dependencies."""
 
-    user_id: uuid.UUID | None = None
+    id: str | None = None
 
 
 class OAuthCallback(BaseModel):
@@ -154,9 +176,10 @@ class OAuthCallback(BaseModel):
 
 class LoginResponse(BaseModel):
     """Schema for the response on successful login."""
+
     access_token: str
-    token_type: str = "bearer"
-    user: UserAuthResponse    
+    # token_type: str = "bearer"
+    user: UserAuthResponse
 
 
 # --- Quiz Session Schemas ---
@@ -165,12 +188,12 @@ class LoginResponse(BaseModel):
 class NewSessionRequest(BaseModel):
     """Schema for requesting a new learning session."""
 
-    tag_id: uuid.UUID | None = None  # Optional: if null, fetches from any topic
+    tag_id: uuid.UUID | None = None
     limit: int = Field(20, gt=0, le=50)
 
 
 class OptionResponse(BaseModel):
-    """A public-facing model for an option (omits the 'is_correct' field)."""
+    """A public-facing model for an option."""
 
     id: uuid.UUID
     option_text: str
@@ -181,14 +204,20 @@ class QuestionResponse(BaseModel):
 
     id: uuid.UUID
     question_text: str
-    options: list
+    options: list[dict[str, str]]
 
 
 class SessionResponse(BaseModel):
     """Schema for the response when a new session is created."""
 
+    session_id: uuid.UUID | None
+    questions: list[QuizQuestion | None]
+
+
+class SessionCreateResponse(BaseModel):
+    """Schema for the response when a new session is created."""
+
     session_id: uuid.UUID
-    questions: list
 
 
 class AnswerSubmissionRequest(BaseModel):
@@ -196,15 +225,66 @@ class AnswerSubmissionRequest(BaseModel):
 
     question_id: uuid.UUID
     selected_option_id: uuid.UUID
-    performance_rating: str  # e.g., 'forgot', 'good', 'easy'
+    performance_rating: str | None = None
     time_to_answer_ms: int = Field(gt=0)
+    completed: bool = False
 
 
 class ProgressUpdateResponse(BaseModel):
     """Schema for the response after submitting an answer."""
 
-    message: str
     is_correct: bool
     correct_option_id: uuid.UUID
     explanation: str
-    new_progress: UserQuestionProgress
+    # new_progress: UserQuestionProgress
+
+
+class ActiveSessionResponse(BaseModel):
+    """
+    Schema for returning the user's most recent unfinished session.
+    """
+
+    id: uuid.UUID
+    session_type: str
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class QuestionFeedbackResponse(BaseModel):
+    """
+    Defines the shape of the feedback data returned for a question.
+    """
+
+    explanation: str
+    correct_option_id: uuid.UUID
+
+
+# Dashboard view
+
+
+class DashboardSummary(BaseModel):
+    due_for_review_count: int
+    new_questions_count: int
+    graduated_questions_count: int
+
+
+class DashboardStatItem(BaseModel):
+    value: float
+    change: float
+
+
+class WeeklyProgressItem(BaseModel):
+    day: str
+    correct: int
+    incorrect: int
+
+
+class DashboardStatsResponse(BaseModel):
+    overallProgress: DashboardStatItem
+    questionsAnswered: DashboardStatItem
+    accuracyRate: DashboardStatItem
+    studyStreak: DashboardStatItem
+    weeklyProgress: list[Any]
+    weeklyAccuracy: list[float]

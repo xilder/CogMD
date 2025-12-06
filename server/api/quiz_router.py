@@ -1,20 +1,25 @@
 # app/api/quiz_router.py
 
 import uuid
+from pprint import pprint
 from typing import Annotated, Any, cast
 
-# Import the correct, full dependency functions and new schemas
-from core.dependencies import get_current_user
-from db.db import get_supabase_client
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
-from models.schemas import (
+from postgrest import APIResponse
+from supabase import AsyncClient
+
+# Import the correct, full dependency functions and new schemas
+from server.core.dependencies import get_current_user
+from server.db.db import get_supabase_client
+from server.models.schemas import (
+    ActiveSessionResponse,
     AnswerSubmissionRequest,
     NewSessionRequest,
     ProgressUpdateResponse,
+    QuestionFeedbackResponse,
+    SessionCreateResponse,
     SessionResponse,
 )
-from postgrest import APIResponse
-from supabase import AsyncClient
 
 router = APIRouter(prefix="/quiz", tags=["Quiz"])
 
@@ -23,7 +28,7 @@ router = APIRouter(prefix="/quiz", tags=["Quiz"])
 
 
 async def log_session_questions(
-    supabase: AsyncClient, session_id: uuid.UUID, question_ids: list
+    supabase: AsyncClient, session_id: uuid.UUID, question_ids: list[str]
 ) -> None:
     """
     A background task to link all questions to a new session in the join table.
@@ -40,7 +45,6 @@ async def log_session_questions(
         await supabase.table("session_question").insert(session_question_data).execute()
 
     except Exception as e:
-        # For production, you would use a proper logger here
         print(f"Error in background task for session {session_id}: {e}")
 
 
@@ -75,7 +79,54 @@ async def get_all_tags(
         )
 
 
-@router.post("/sessions/new", response_model=SessionResponse)
+@router.get(
+    "/sessions/active",
+    response_model=ActiveSessionResponse | None,
+    summary="Check for an unfinished session",
+)
+async def check_for_active_session(
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
+    """
+    Checks if the currently authenticated user has any quiz sessions
+    that were started but not completed.
+
+    This is used to prompt the user to "pick up where they left off".
+
+    It returns the most recent active session, or null if none are found.
+    """
+    user_id = current_user.id
+    try:
+        # Query the user_quiz_sessions table
+        response = (
+            await supabase.table("user_quiz_sessions")
+            .select("id, session_type, created_at")
+            .eq("user_id", user_id)
+            .is_("completed_at", "null")
+            .order("created_at", desc=True)
+            .execute()
+        )
+
+        if len(response.data) == 0:
+            return None
+
+        if not response.data[0]:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="You have no unfinished session",
+            )
+        return response.data[0]
+
+    except Exception as e:
+        pprint(e, indent=2) 
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred while fetching active session: {str(e)}",
+        )
+
+
+@router.post("/sessions/new", response_model=SessionCreateResponse)
 async def create_new_learning_session(
     background_tasks: BackgroundTasks,
     request_body: NewSessionRequest,
@@ -86,49 +137,31 @@ async def create_new_learning_session(
     Creates a new learning session with questions the user has not seen before.
     Uses an optimized RPC that returns full question objects in one call.
     """
-    user_id = str(current_user.user_id)
+    user_id = current_user.id
     try:
-        # 1. Create the session record immediately to get a session_id
-        _session_res = (
-            await supabase.table("user_quiz_sessions")
-            .insert({"user_id": user_id, "session_type": "new_learning"})
-            .execute()
-        )
-        session_res = cast(APIResponse, _session_res)
-        session_data = cast(dict[str, str], session_res.data[0])
-        session_id = uuid.UUID(session_data["id"])
-
-        # 2. Call the RPC to get new questions
         rpc_params = {
             "p_user_id": user_id,
             "p_tag_id": str(request_body.tag_id) if request_body.tag_id else None,
             "p_limit": request_body.limit,
         }
-        questions_res = await supabase.rpc(
+        session_res = await supabase.rpc(
             "get_new_questions_for_user", rpc_params
         ).execute()
+        session_id = session_res.data
 
-        if not questions_res.data:
+        if not session_res.data:
             return SessionResponse(session_id=session_id, questions=[])
 
-        questions_data = cast(list[Any], questions_res.data)
-
-        # 3. Schedule the background task to log the questions to the session
-        question_ids = [q["id"] for q in questions_data]
-        background_tasks.add_task(
-            log_session_questions, supabase, session_id, question_ids
-        )
-
-        # 4. Return the session ID and questions to the user immediately
-        return SessionResponse(session_id=session_id, questions=questions_data)
+        return SessionCreateResponse(session_id=session_id)
 
     except Exception as e:
+        print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
-@router.post("/sessions/review", response_model=SessionResponse)
+@router.post("/sessions/review", response_model=SessionCreateResponse)
 async def create_review_session(
     background_tasks: BackgroundTasks,
     request_body: NewSessionRequest,
@@ -139,42 +172,62 @@ async def create_review_session(
     Creates a new review session with all questions currently due for the user.
     Uses an optimized RPC to fetch all data in a single database operation.
     """
-    user_id = str(current_user.user_id)
+    user_id = current_user.id
     try:
-        # 1. Create the session record immediately
-        _session_res = (
-            await supabase.table("user_quiz_sessions")
-            .insert({"user_id": user_id, "session_type": "review"})
-            .execute()
-        )
-        session_res = cast(APIResponse, _session_res)
-        session_data = cast(list[Any], session_res.data)
-        session_id = uuid.UUID(session_data[0]["id"])
-
-        # 2. Call the RPC to get all due questions and their options
         rpc_params = {
             "p_user_id": user_id,
             "p_tag_id": str(request_body.tag_id) if request_body.tag_id else None,
             "p_limit": request_body.limit,
         }
-        due_questions_res = await supabase.rpc(
-            "get_due_review_questions", rpc_params
+        session_res = await supabase.rpc(
+            "get_due_review_questions_for_user", rpc_params
         ).execute()
+        session_id = session_res.data
 
-        _questions_data = due_questions_res.data if due_questions_res.data else []
-        questions_data = cast(list[Any], _questions_data)
+        if not session_res.data:
+            return SessionResponse(session_id=session_id, questions=[])
 
-        # 3. Schedule the background task to log the questions
-        question_ids = [q["id"] for q in questions_data]
-        background_tasks.add_task(
-            log_session_questions, supabase, session_id, question_ids
-        )
-
-        # 4. Return the response to the user immediately
-        return SessionResponse(session_id=session_id, questions=questions_data)
+        return SessionCreateResponse(session_id=session_id)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+@router.post("/sessions/mixed", response_model=SessionCreateResponse)
+async def create_smart_session(
+    background_tasks: BackgroundTasks,
+    request_body: NewSessionRequest,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
+    """
+    Creates a new learning session with questions the user has not seen before.
+    Uses an optimized RPC that returns full question objects in one call.
+    """
+    user_id = str(current_user.id)
+    try:
+        # 2. Call the RPC to get new questions
+        rpc_params = {
+            "p_user_id": user_id,
+            "p_tag_id": str(request_body.tag_id) if request_body.tag_id else None,
+            "p_limit": request_body.limit if request_body.limit else 20,
+        }
+        session_res = await supabase.rpc(
+            "create_smart_session_for_user", rpc_params
+        ).execute()
+        session_id = session_res.data
+
+        if not session_res.data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create smart session.",
+            )
+        return SessionCreateResponse(session_id=uuid.UUID(session_id))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
         )
 
 
@@ -192,12 +245,15 @@ async def submit_answer(
     try:
         # 1. Prepare parameters for the RPC call
         rpc_params = {
-            "p_user_id": str(current_user.user_id),
+            "p_user_id": str(current_user.id),
             "p_session_id": str(session_id),
             "p_question_id": str(submission.question_id),
             "p_selected_option_id": str(submission.selected_option_id),
             "p_performance_rating": submission.performance_rating,
             "p_time_to_answer_ms": submission.time_to_answer_ms,
+            "p_completed": (
+                submission.completed if submission.completed is not None else False
+            ),
         }
 
         # 2. Make a single, atomic call to the database function
@@ -206,20 +262,22 @@ async def submit_answer(
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to process answer and update progress.",
+                detail=(
+                    response.data["error"]
+                    if "error" in response.data
+                    else "Failed to process answer and update progress."
+                ),
             )
 
-        # 3. The RPC returns all the data we need for the response
         _result = response.data
         result = cast(dict[str, Any], _result)
         return ProgressUpdateResponse(
-            message="Answer processed successfully",
             is_correct=result["is_correct"],
             correct_option_id=result["correct_option_id"],
             explanation=result["explanation"],
-            new_progress=result["new_progress"],
         )
     except Exception as e:
+        print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -228,30 +286,84 @@ async def submit_answer(
 @router.get("/sessions/{session_id}/resume", response_model=SessionResponse)
 async def resume_quiz_session(
     session_id: uuid.UUID,
-    supabase: Annotated,
-    current_user: Annotated,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
 ):
     """
     Resumes an in-progress quiz session.
-    Fetches only the questions that the user has not yet answered for this session.
     """
-    user_id = str(current_user.user_id)
+    if not session_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Missing session ID.",
+        )
+    user_id = current_user.id
     try:
         # First, verify that the session belongs to the current user for security.
-        session_owner_res = await supabase.table("user_quiz_sessions").select("user_id").eq("id", str(session_id)).single().execute()
-        if not session_owner_res.data or session_owner_res.data.get("user_id")!= user_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or access denied.")
+        session_owner_res = (
+            await supabase.table("user_quiz_sessions")
+            .select("user_id")
+            .eq("id", str(session_id))
+            .single()
+            .execute()
+        )
+        if (
+            not session_owner_res.data
+            or session_owner_res.data.get("user_id") != user_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found or access denied.",
+            )
 
-        # Call the RPC function to get the remaining questions.
-        rpc_params = {
-            "p_session_id": str(session_id),
-            "p_user_id": user_id
-        }
-        unanswered_questions_res = await supabase.rpc("get_unanswered_questions_for_session", rpc_params).execute()
+        rpc_params = {"p_session_id": str(session_id), "p_user_id": str(user_id)}
+        unanswered_questions_res = await supabase.rpc(
+            "get_unanswered_questions_for_session", rpc_params
+        ).execute()
 
-        questions_data = unanswered_questions_res.data if unanswered_questions_res.data else []
+        questions_data = (
+            unanswered_questions_res.data if unanswered_questions_res.data else []
+        )
 
         return SessionResponse(session_id=session_id, questions=questions_data)
 
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+@router.get(
+    "/questions/{question_id}/feedback",
+    response_model=QuestionFeedbackResponse,
+    summary="Get Answer Feedback for a Question",
+)
+async def get_question_feedback(
+    question_id: uuid.UUID,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
+    """
+    Retrieves the correct option ID and the detailed explanation for a
+    specific question. This is a protected route.
+
+    This is typically called a user has submitted an answer
+    in a mode like "Test" or "Tutor" where feedback is not immediate.
+    """
+    try:
+        # Call the RPC function we created in Step 1
+        rpc_params = {"p_question_id": str(question_id)}
+        response = await supabase.rpc("get_question_feedback", rpc_params).execute()
+
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Feedback not found for this question.",
+            )
+        return response.data
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
