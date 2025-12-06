@@ -119,7 +119,6 @@ async def check_for_active_session(
         return response.data[0]
 
     except Exception as e:
-        pprint(e, indent=2) 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred while fetching active session: {str(e)}",
@@ -155,7 +154,6 @@ async def create_new_learning_session(
         return SessionCreateResponse(session_id=session_id)
 
     except Exception as e:
-        print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -277,7 +275,6 @@ async def submit_answer(
             explanation=result["explanation"],
         )
     except Exception as e:
-        print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
@@ -328,7 +325,6 @@ async def resume_quiz_session(
         return SessionResponse(session_id=session_id, questions=questions_data)
 
     except Exception as e:
-        print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

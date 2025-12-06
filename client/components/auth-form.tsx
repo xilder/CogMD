@@ -65,7 +65,6 @@ export default function AuthForm({ type }: AuthFormProps) {
       router.push(CLIENT.DASHBOARD);
     },
     onError: (e) => {
-      console.log(e)
       setInfo('error', e.message);
     },
   });

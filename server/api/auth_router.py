@@ -1,6 +1,5 @@
 # app/api/auth_router.py
 from os import access
-from pprint import pprint
 from typing import Annotated, Any, cast
 
 from fastapi import (
@@ -244,7 +243,6 @@ async def google_callback(
         set_refresh_token_cookie(response, refresh_token)
 
         user_profile = cast(UserAuthResponse, profile_response.data[0])
-        print(refresh_token, access_token)
 
         return LoginResponse(
             access_token=access_token,

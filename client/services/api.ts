@@ -222,7 +222,6 @@ export const getActiveSession = async () => {
   const { data } = await api.get<ActiveSessionResponse | null>(
     SERVER.ACTIVE_SESSION
   );
-  console.log(data)
   return data;
 };
 

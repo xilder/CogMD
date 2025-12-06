@@ -387,7 +387,6 @@ export default function QuizPageRefactor({
     //   explanations,
     //   time
     // );
-    // console.log(testResult);
     const keys = Object.keys(history);
     const allSubmitted =
       keys.length >= 1 && keys.every((k) => history[k]?.submitted === true);

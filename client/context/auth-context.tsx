@@ -79,11 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [user, isLoading, updateUser, clientLogout]
   );
 
-  // useEffect(
-  //   () => console.log(isLoading, justLoggedOut),
-  //   [isLoading, justLoggedOut]
-  // );
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

@@ -16,8 +16,6 @@ export default function GoogleCallback() {
       try {
         const code = params.get('code');
         const code_verifier = sessionStorage.getItem('code_verifier');
-
-        console.log('Credentials:', { code, hasVerifier: !!code_verifier });
         if (!code || !code_verifier) {
           throw new Error('Missing OAuth credentials');
         }

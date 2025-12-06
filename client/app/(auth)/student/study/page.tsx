@@ -96,7 +96,6 @@ export default function StudyPage() {
   });
 
   useEffect(() => {
-    console.log(getSession.data?.session_id);
     if (getSession.data?.session_id)
       router.push(CLIENT.SESSION(getSession.data?.session_id));
   }, [getSession.isSuccess]);
@@ -159,7 +158,7 @@ export default function StudyPage() {
                       onClick={() => {
                         getSession.mutate({
                           tag_id: topic.id,
-                          limit: 5,
+                          limit: 10,
                           type: 'review',
                         });
                         router.push(
@@ -179,7 +178,7 @@ export default function StudyPage() {
                       onClick={() => {
                         getSession.mutate({
                           tag_id: topic.id,
-                          limit: 5,
+                          limit: 10,
                           type: 'test',
                         });
                         router.push(
@@ -198,7 +197,7 @@ export default function StudyPage() {
                       onClick={() => {
                         getSession.mutate({
                           tag_id: topic.id,
-                          limit: 2,
+                          limit: 10,
                           type: 'tutor',
                         });
                         router.push(
