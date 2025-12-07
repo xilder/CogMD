@@ -1,11 +1,5 @@
 import os
-
-from dotenv import load_dotenv
-from postgrest import APIResponse
 from supabase import AsyncClient, acreate_client
-
-
-load_dotenv()
 SUPABASE_URL = os.getenv('SUPABASE_URL', '')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY', '')
 
@@ -15,10 +9,7 @@ async def get_supabase_client() -> AsyncClient:
         raise ValueError("Supabase credentials not set.")
     supabase: AsyncClient = await acreate_client(SUPABASE_URL, SUPABASE_KEY)
     try:
-    # This executes the query and tries to fetch the result
-        result = await supabase.from_('user').select('*').execute()
-    
-    # If the execution succeeds, the connection is considered alive
+        await supabase.from_('user').select('*').limit(1).execute()
     
     except Exception as e:
         print(f"❌ Supabase connection failed: {e}")
