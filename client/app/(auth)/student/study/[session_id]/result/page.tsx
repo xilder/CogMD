@@ -47,11 +47,7 @@ const mockResults: TestResult[] = [
   },
 ];
 
-export default function ResultsPage({
-  params,
-}: {
-  params: { session_id: string };
-}) {
+export default function ResultsPage() {
   const router = useRouter();
   const [selectedQuestion, setSelectedQuestion] = useState<TestResult | null>(
     null
