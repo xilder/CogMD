@@ -129,11 +129,8 @@ export async function generateStaticParams() {
     slug,
   }));
 }
-interface BlogPostPageProps {
-  params: { slug: string };
-}
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
+export default function BlogPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
   const post = blogPosts[slug];
 
