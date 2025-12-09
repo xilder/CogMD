@@ -26,26 +26,26 @@ interface TestResult {
 }
 
 // Mock results data
-const mockResults: TestResult[] = [
-  {
-    questionId: 'q1',
-    questionText: 'A 45-year-old male presents with chest pain...',
-    userAnswer: 'Inferior wall MI',
-    correctAnswer: 'Inferior wall MI',
-    isCorrect: true,
-    explanation:
-      'Correct! ST elevation in II, III, aVF indicates inferior wall MI.',
-  },
-  {
-    questionId: 'q2',
-    questionText: 'Which of the following is the most common cause...',
-    userAnswer: 'Medications',
-    correctAnswer: 'Prerenal hypoperfusion',
-    isCorrect: false,
-    explanation:
-      'Prerenal hypoperfusion is the most common cause of AKI in hospitalized patients.',
-  },
-];
+// const mockResults: TestResult[] = [
+//   {
+//     questionId: 'q1',
+//     questionText: 'A 45-year-old male presents with chest pain...',
+//     userAnswer: 'Inferior wall MI',
+//     correctAnswer: 'Inferior wall MI',
+//     isCorrect: true,
+//     explanation:
+//       'Correct! ST elevation in II, III, aVF indicates inferior wall MI.',
+//   },
+//   {
+//     questionId: 'q2',
+//     questionText: 'Which of the following is the most common cause...',
+//     userAnswer: 'Medications',
+//     correctAnswer: 'Prerenal hypoperfusion',
+//     isCorrect: false,
+//     explanation:
+//       'Prerenal hypoperfusion is the most common cause of AKI in hospitalized patients.',
+//   },
+// ];
 
 export default function ResultsPage() {
   const router = useRouter();

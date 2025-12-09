@@ -1,12 +1,22 @@
 'use client';
+import { AverageCourseProgress } from '@/components/admin/dashboard/average-course-progress';
+import { CertificateRequests } from '@/components/admin/dashboard/certificate-requests';
+import { ModuleCompletion } from '@/components/admin/dashboard/module-completion';
+import { PlatformEngagement } from '@/components/admin/dashboard/platform-engagement';
+import { QuickActions } from '@/components/admin/dashboard/quick-actions';
+import { StatsCards } from '@/components/admin/dashboard/stats-cards';
+import { TasksList } from '@/components/admin/dashboard/tasks-list';
+import { WeekHighlights } from '@/components/admin/dashboard/week-highlights';
+import { WeeklyModuleCompletion } from '@/components/admin/dashboard/weekly-module-completion';
 import { useState } from 'react';
+import DashboardHeader from '@/components/dashboard-header';
 
 export default function DashboardPage() {
   const [menu, setMenu] = useState(false);
   const onMenuClick = () => setMenu((prev) => !prev);
   return (
     <div className='min-h-screen bg-gray-50 p-4 sm:p-6'>
-      {/* <div className='mx-auto w-full space-y-4 sm:space-y-6'>
+      <div className='mx-auto w-full space-y-4 sm:space-y-6'>
         <DashboardHeader onMenuClick={onMenuClick} />
         <StatsCards />
 
@@ -34,7 +44,7 @@ export default function DashboardPage() {
             <QuickActions />
           </div>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }
