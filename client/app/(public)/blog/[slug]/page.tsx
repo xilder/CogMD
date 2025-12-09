@@ -122,12 +122,20 @@ Remember, taking care of yourself isn't a distraction from your PLAB preparation
   },
 };
 
+export async function generateStaticParams() {
+  const slugs = Object.keys(blogPosts);
+
+  return slugs.map((slug) => ({
+    slug: slug,
+  }));
+}
+
 export default async function BlogPostPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const { slug } = await params;
+  const { slug } = params;
   const post = blogPosts[slug];
 
   if (!post) {
