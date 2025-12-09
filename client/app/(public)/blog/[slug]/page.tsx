@@ -126,11 +126,11 @@ export async function generateStaticParams() {
   const slugs = Object.keys(blogPosts);
 
   return slugs.map((slug) => ({
-    slug: slug,
+    slug,
   }));
 }
 
-export default async function BlogPostPage({
+export default function BlogPostPage({
   params,
 }: {
   params: { slug: string };
