@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-logging.config.fileConfig("./logging.ini", disable_existing_loggers=False)
+logging.config.fileConfig("./server/logging.ini", disable_existing_loggers=False)
 logger = logging.getLogger("app") 
 
 app = FastAPI(
@@ -18,7 +18,7 @@ app = FastAPI(
     },
     debug=True,
 )
-origins = ["http://localhost:3000", "http://localhost:3001", os.environ.ORIGIN_URL ]
+origins = ["http://localhost:3000", "http://localhost:3001", os.environ.get("ORIGIN_URL", "") ]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
