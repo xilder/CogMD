@@ -1,5 +1,6 @@
 # app/api/auth_router.py
 from os import access
+import os
 from typing import Annotated, Any, cast
 
 from fastapi import (
@@ -32,6 +33,7 @@ from server.models.schemas import (
 
 # Initialize the router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+origin_url = os.environ.get("ORIGIN_URL", "http://localhost:3000") 
 
 
 # --- Helper function to set the secure cookie ---
@@ -212,7 +214,7 @@ async def google_callback(
             {
                 "auth_code": callback_data.code,
                 "code_verifier": callback_data.code_verifier,
-                "redirect_to": "http://localhost:3000/callback",
+                "redirect_to": f"{origin_url}/callback",
             }
         )
 
@@ -285,7 +287,7 @@ async def refresh_access_token(
     This allows the user's session to be extended without requiring them to log in again.
     """
     if cognito_refresh_token is None:
-        await supabase.auth.sign_out()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorised")
 
     authorisation = request.headers.get("authorization", None)
 

@@ -22,7 +22,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001/';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/';
 
 let accessToken: string | null = null;
 let isRefreshing = false;
