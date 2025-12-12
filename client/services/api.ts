@@ -43,7 +43,7 @@ const shouldUseToken = (url: string | undefined) =>
   url ? !publicUrls.some((u) => u.includes(url)) : false;
 
 const config: AxiosRequestConfig = {
-  baseURL: process.env.NEXT_PUBLIC_API_URL || BASE_URL,
+  baseURL: BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ api.interceptors.response.use(
       } catch (err) {
         isRefreshing = false;
         refreshQueue = [];
-        setAccessToken(null)
+        setAccessToken(null);
         return Promise.reject(err);
       }
     }
@@ -143,7 +143,6 @@ export const refreshToken = async () => {
     const { data } = await api.post<{ access_token: string }>(
       SERVER.REFRESH_TOKEN
     );
-    setAccessToken(data.access_token);
     return data;
   } catch (error) {
     throw error;

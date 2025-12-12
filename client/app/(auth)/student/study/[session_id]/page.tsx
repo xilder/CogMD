@@ -19,7 +19,7 @@ import type {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Clock, Lightbulb, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { use, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type QuizMode = 'review' | 'test' | 'tutor';
 
@@ -64,7 +64,7 @@ function useQuizTimer(mode: QuizMode) {
   };
 
   const getAccumulated = (qid?: string) =>
-    qid ? accumulatedRef.current[qid] ?? 0 : 0;
+    qid ? accumulatedRef.current[qid] : 0;
 
   return { start, stopAndAccumulate, getAccumulated, accumulatedRef };
 }
@@ -101,9 +101,9 @@ function buildTestResults(
 export default function QuizPageRefactor({
   params,
 }: {
-  params: Promise<{ session_id: string }>;
+  params: { session_id: string };
 }) {
-  const sessionId = use(params).session_id;
+  const sessionId = params.session_id;
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = (searchParams.get('mode') || 'review').toLowerCase() as QuizMode;
@@ -463,10 +463,10 @@ export default function QuizPageRefactor({
                   >
                     {qState.index + 1}
                   </p>
-                  <div className='absolute left-0 rounded opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity flex flex-col gap-1 border-0.5 p-2 bg-[#a3d5ff99] w-100'>
+                  <div className='absolute left-0 rounded opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity flex flex-col gap-1 border-0.5 p-5 bg-[#a3d5ff99] w-100'>
                     {Object.entries(qState).map(([k, v]) =>
                       (k as Key) !== 'question' ? (
-                        <p className='text-xs bg-[]' key={k}>
+                        <p className='text-xs bg-[ ]' key={k}>
                           <span className='font-semibold'>
                             {capitaliseWords(k)}
                           </span>

@@ -32,3 +32,4 @@ next-env.d.ts
 **/**_file.json
 **/batch_uploader
 **/**.log
+**/logs/
