@@ -18,7 +18,7 @@ import type {
 } from '@/types/schemas';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Clock, Lightbulb, X } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type QuizMode = 'review' | 'test' | 'tutor';
@@ -98,11 +98,8 @@ function buildTestResults(
   return results;
 }
 
-export default function QuizPageRefactor({
-  params,
-}: {
-  params: { session_id: string };
-}) {
+export default function QuizPageRefactor() {
+  const params = useParams() as { session_id: string };
   const sessionId = params.session_id;
   const router = useRouter();
   const searchParams = useSearchParams();
