@@ -161,7 +161,7 @@ export type QuizQuestion = {
   /** A public-facing type for a question, including its options. */
   id: string;
   question_text: string;
-  type: 'new' | 'review';
+  type: 'test' | 'review' | 'tutor';
   options: QuizOption[];
   hint?: string;
   correct_option: string | null;

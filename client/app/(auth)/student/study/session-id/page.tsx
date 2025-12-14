@@ -105,6 +105,7 @@ export default function QuizPageRefactor() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = (searchParams.get('mode') || 'review').toLowerCase() as QuizMode;
+  const { setTestResult, setTotalTime } = useQuestionContext();
 
   // Query to get questions left in the session
   const questionsLeft = useQuery({
@@ -407,6 +408,9 @@ export default function QuizPageRefactor() {
     const totalTimeSec = Object.values(times).reduce((a, b) => a + b, 0) / 1000;
     const formatted = new Date(totalTimeSec * 1000).toISOString().substr(11, 8);
 
+    setTestResult(testResults);
+    setTotalTime(formatted);
+
     sessionStorage.setItem('testResults', JSON.stringify(testResults));
     sessionStorage.setItem('totalTime', formatted);
     router.push(CLIENT.RESULT());
@@ -447,7 +451,7 @@ export default function QuizPageRefactor() {
 
           <div>
             {Object.values(history).map((qState) => {
-              type Key = keyof QState;
+              type Key = keyof QuizQuestion;
               return (
                 <button
                   className='group relative inline-block m-1 p-2 border rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center flex-wrap'
@@ -462,16 +466,35 @@ export default function QuizPageRefactor() {
                     {qState.index + 1}
                   </p>
                   <div className='absolute left-0 rounded opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity flex flex-col gap-1 border-0.5 p-5 bg-[#a3d5ff99] w-100'>
-                    {Object.entries(qState).map(([k, v]) =>
-                      (k as Key) !== 'question' ? (
-                        <p className='text-xs bg-[ ]' key={k}>
-                          <span className='font-semibold'>
-                            {capitaliseWords(k)}
-                          </span>
-                          : {v?.toString()}
-                        </p>
-                      ) : null
-                    )}
+                    <div>
+                      {/* Question Text */}
+                      <p className='text-sm mb-2'>
+                        <span className='font-bold'>Question:</span>{' '}
+                        {qState.question?.question_text}
+                      </p>
+
+                      {/* Option Picked */}
+                      <p className='text-sm mb-2'>
+                        <span className='font-bold'>Option Picked:</span>
+                        {qState.question?.option_picked_id ? (
+                          qState.question?.options.find(
+                            (opt) =>
+                              opt.id === qState.question?.option_picked_id
+                          )?.option_text || qState.question?.option_picked_id
+                        ) : (
+                          <span className='text-gray-500'>Not Answered</span>
+                        )}
+                      </p>
+
+                      {/* Time Spent */}
+                      <p className='text-sm'>
+                        <span className='font-bold'>Time Spent:</span>{' '}
+                        {(
+                          (qState.question?.time_to_answer_ms as number) / 1000
+                        ).toFixed(1)}{' '}
+                        seconds
+                      </p>
+                    </div>
                   </div>
                 </button>
               );

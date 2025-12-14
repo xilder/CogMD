@@ -12,60 +12,32 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CLIENT } from '@/lib/routes';
+import { TestResult } from '@/types/schemas';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-interface TestResult {
-  questionId: string;
-  questionText: string;
-  userAnswer: string;
-  correctAnswer: string;
-  isCorrect: boolean;
-  explanation: string;
-}
-
-// Mock results data
-// const mockResults: TestResult[] = [
-//   {
-//     questionId: 'q1',
-//     questionText: 'A 45-year-old male presents with chest pain...',
-//     userAnswer: 'Inferior wall MI',
-//     correctAnswer: 'Inferior wall MI',
-//     isCorrect: true,
-//     explanation:
-//       'Correct! ST elevation in II, III, aVF indicates inferior wall MI.',
-//   },
-//   {
-//     questionId: 'q2',
-//     questionText: 'Which of the following is the most common cause...',
-//     userAnswer: 'Medications',
-//     correctAnswer: 'Prerenal hypoperfusion',
-//     isCorrect: false,
-//     explanation:
-//       'Prerenal hypoperfusion is the most common cause of AKI in hospitalized patients.',
-//   },
-// ];
+import { useQuestionContext } from '../../../layout';
 
 export default function ResultsPage() {
   const router = useRouter();
   const [selectedQuestion, setSelectedQuestion] = useState<TestResult | null>(
     null
   );
-  const [testResult, setTestResult] = useState<TestResult[]>([]);
-  const [totalTime, setTotalTime] = useState<string>('00:00');
+  // const [testResult, setTestResult] = useState<TestResult[]>([]);
+  // const [totalTime, setTotalTime] = useState<string>('00:00');
 
   const [correctCount, setCorrectCount] = useState(0);
   const [accuracy, setAccuracy] = useState(0);
+  const { testResult, totalTime } = useQuestionContext();
 
-  useEffect(() => {
-    const results = sessionStorage.getItem('testResults');
-    const time = sessionStorage.getItem('totalTime');
-    if (results) {
-      setTestResult(JSON.parse(results));
-    }
-    if (time) setTotalTime(time);
-  }, []);
+  // useEffect(() => {
+  //   const results = sessionStorage.getItem('testResults');
+  //   const time = sessionStorage.getItem('totalTime');
+  //   if (results) {
+  //     setTestResult(JSON.parse(results));
+  //   }
+  //   if (time) setTotalTime(time);
+  // }, []);
 
   useEffect(() => {
     setCorrectCount(testResult.filter((r) => r.isCorrect).length);
@@ -213,7 +185,7 @@ export default function ResultsPage() {
 
                   <QuizFeedback
                     isCorrect={selectedQuestion.isCorrect}
-                    explanation={selectedQuestion.explanation}
+                    explanation={selectedQuestion.explanation as string}
                     userAnswer={selectedQuestion.userAnswer}
                     correctAnswer={selectedQuestion.correctAnswer}
                   />

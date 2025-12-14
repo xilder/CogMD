@@ -8,6 +8,7 @@ import {
   DashboardStatsResponse,
   DashboardSummary,
   QuizQuestion,
+  TestResult,
 } from '@/types/schemas';
 import { useQueries } from '@tanstack/react-query';
 import { createContext, memo, useCallback, useContext, useState } from 'react';
@@ -17,6 +18,10 @@ type QuizQuestionsContext = {
   setSessionIdFn: (sessionId: string | null) => void;
   questions: QuizQuestion[];
   setQuestionsFn: (questions: QuizQuestion[]) => void;
+  testResult: TestResult[];
+  setTestResult: (results: TestResult[]) => void;
+  totalTime: string;
+  setTotalTime: (time: string) => void;
 };
 const QuestionsContext = createContext<QuizQuestionsContext | undefined>(
   undefined
@@ -46,6 +51,8 @@ const StudentLayout = ({ children }: { children: React.ReactNode }) => {
     (qs: QuizQuestion[]) => setQuestions(qs),
     []
   );
+  const [testResult, setTestResult] = useState<TestResult[]>([]);
+  const [totalTime, setTotalTime] = useState<string>('00:00');
   const toggleSidebar = useCallback(() => setSidebarOpen((s) => !s), []);
 
   const [statsQuery, summaryQuery] = useQueries({
@@ -76,7 +83,7 @@ const StudentLayout = ({ children }: { children: React.ReactNode }) => {
         value={{ stats: statsQuery.data, summary: summaryQuery.data }}
       >
         <QuestionsContext.Provider
-          value={{ sessionId, setSessionIdFn, questions, setQuestionsFn }}
+          value={{ sessionId, setSessionIdFn, questions, setQuestionsFn, testResult, setTestResult, totalTime, setTotalTime }}
         >
           <div className='flex h-screen bg-background'>
             <MemoSidebar
