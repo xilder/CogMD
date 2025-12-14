@@ -18,8 +18,9 @@ import type {
 } from '@/types/schemas';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Clock, Lightbulb, X } from 'lucide-react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQuestionContext } from '../../layout';
 
 type QuizMode = 'review' | 'test' | 'tutor';
 
@@ -99,8 +100,8 @@ function buildTestResults(
 }
 
 export default function QuizPageRefactor() {
-  const params = useParams() as { session_id: string };
-  const sessionId = params.session_id;
+  let { sessionId } = useQuestionContext();
+  sessionId = sessionId as string;
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = (searchParams.get('mode') || 'review').toLowerCase() as QuizMode;
@@ -408,7 +409,7 @@ export default function QuizPageRefactor() {
 
     sessionStorage.setItem('testResults', JSON.stringify(testResults));
     sessionStorage.setItem('totalTime', formatted);
-    router.push(CLIENT.RESULT(sessionId));
+    router.push(CLIENT.RESULT());
   }, [
     history,
     questions,
@@ -640,7 +641,7 @@ export default function QuizPageRefactor() {
                   <Button
                     onClick={() => {
                       handleEnd();
-                      router.push(CLIENT.RESULT(sessionId));
+                      router.push(CLIENT.RESULT());
                     }}
                     disabled={
                       (mode !== 'test' &&

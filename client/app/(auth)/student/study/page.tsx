@@ -42,11 +42,10 @@ export default function StudyPage() {
   });
 
   const setQuiz = () => {
-    if (activeSession.data)
-      router.push(
-        CLIENT.SESSION(activeSession.data.id, activeSession.data.session_type)
-      );
-    else router.push(CLIENT.STUDY);
+    if (activeSession.data) {
+      setSessionIdFn(activeSession.data.id);
+      router.push(CLIENT.SESSION(activeSession.data.session_type));
+    } else router.push(CLIENT.STUDY);
   };
 
   const getSession = useMutation({
@@ -96,8 +95,7 @@ export default function StudyPage() {
   });
 
   useEffect(() => {
-    if (getSession.data?.session_id)
-      router.push(CLIENT.SESSION(getSession.data?.session_id));
+    if (getSession.data?.session_id) router.push(CLIENT.SESSION());
   }, [getSession.isSuccess]);
 
   const specialtyList = getAllTags.data;
@@ -161,12 +159,7 @@ export default function StudyPage() {
                           limit: 10,
                           type: 'review',
                         });
-                        router.push(
-                          CLIENT.SESSION(
-                            getSession.data?.session_id as string,
-                            'review'
-                          )
-                        );
+                        router.push(CLIENT.SESSION('review'));
                       }}
                     >
                       Review Mode
@@ -181,12 +174,7 @@ export default function StudyPage() {
                           limit: 10,
                           type: 'test',
                         });
-                        router.push(
-                          CLIENT.SESSION(
-                            getSession.data?.session_id as string,
-                            'test'
-                          )
-                        );
+                        router.push(CLIENT.SESSION('test'));
                       }}
                     >
                       Test Mode
@@ -200,12 +188,7 @@ export default function StudyPage() {
                           limit: 10,
                           type: 'tutor',
                         });
-                        router.push(
-                          CLIENT.SESSION(
-                            getSession.data?.session_id as string,
-                            'tutor'
-                          )
-                        );
+                        router.push(CLIENT.SESSION('tutor'));
                       }}
                     >
                       Tutor Mode

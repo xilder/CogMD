@@ -1,7 +1,22 @@
-// import { SessionResponse } from "@/types/schemas";
-// import { createContext, ReactNode } from "react";
+// import { createContext, ReactNode, useState } from 'react';
 
-// const QuestionsContext = createContext<SessionResponse | undefined>(undefined);
+// type QuestionsContextType = {
+//   sessionId: string | null;
+//   setSessionId: (id: string | null) => void;
+// };
 
+// const QuestionsContext = createContext<QuestionsContextType | undefined>(
+//   undefined
+// );
 
-// const QuestionsContextProvider = ({ children }: { children: ReactNode }) => 
+// const QuestionsContextProvider = ({ children }: { children: ReactNode }) => {
+//   const [sessionId, setSessionId] = useState<string | null>(null);
+
+//   return (
+//     <QuestionsContext.Provider value={{ sessionId, setSessionId }}>
+//       {children}
+//     </QuestionsContext.Provider>
+//   );
+// };
+
+// export default QuestionsContextProvider;

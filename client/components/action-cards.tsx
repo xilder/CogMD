@@ -30,11 +30,10 @@ export default function ActionCards() {
     queryFn: getActiveSession,
   });
   const setQuiz = () => {
-    if (activeSession.data)
-      router.push(
-        CLIENT.SESSION(activeSession.data.id, activeSession.data.session_type)
-      );
-    else router.push(CLIENT.STUDY);
+    if (activeSession.data) {
+      setSessionIdFn(activeSession.data.id);
+      router.push(CLIENT.SESSION(activeSession.data.session_type));
+    } else router.push(CLIENT.STUDY);
   };
   const getSession = useMutation({
     mutationFn: ({
@@ -51,7 +50,7 @@ export default function ActionCards() {
       if (!data.session_id) setInfo('info', `No more new questions.`);
       else {
         setSessionIdFn(data.session_id);
-        router.push(CLIENT.SESSION(data.session_id, variables.type));
+        router.push(CLIENT.SESSION(variables.type));
       }
     },
   });

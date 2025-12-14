@@ -21,12 +21,12 @@ export const CLIENT = {
   STUDY: `${BASE_PATHS.STUDENT}/study`,
 
   // --- Dynamic Routes (as functions) ---
-  SESSION: (session_id: string, mode?: string) =>
-    `${BASE_PATHS.STUDENT}/study/${session_id}${
+  SESSION: (mode?: string) =>
+    `${BASE_PATHS.STUDENT}/study/session-id${
       mode ? `?mode=${mode}` : ''
     }`,
-  RESULT: (session_id: string) =>
-    `${BASE_PATHS.STUDENT}/study/${session_id}/result`,
+  RESULT: () =>
+    `${BASE_PATHS.STUDENT}/study/session-id/result`,
   POST: (slug: string) => `${BASE_PATHS.BLOG}/${slug}`,
   PROFILE: (username: string) => `${BASE_PATHS.USER}/${username}`,
 };
