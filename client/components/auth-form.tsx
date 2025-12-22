@@ -17,6 +17,7 @@ import {
 } from '@/types/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { Chrome, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -64,7 +65,7 @@ export default function AuthForm({ type }: AuthFormProps) {
       updateUser(data.user);
       router.push(CLIENT.DASHBOARD);
     },
-    onError: (e) => {
+    onError: (e: AxiosError) => {
       setInfo('error', e.message);
     },
   });
@@ -165,14 +166,16 @@ export default function AuthForm({ type }: AuthFormProps) {
               htmlFor='username'
               className='text-sm font-medium text-foreground'
             >
-              Username
+              {type === 'signup' ? 'Username' : 'Email'}
             </label>
             <div className='relative flex items-center'>
               <Mail className='absolute left-3 w-5 h-5 text-muted-foreground' />
               <Input
                 id='username'
                 type='text'
-                placeholder='thunderbolt'
+                placeholder={
+                  type === 'signup' ? 'thunderbolt' : 'lagbaja@gmail.com'
+                }
                 className='pl-10'
                 {...register('username')}
                 disabled={isSubmitting}

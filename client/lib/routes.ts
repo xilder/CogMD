@@ -22,11 +22,8 @@ export const CLIENT = {
 
   // --- Dynamic Routes (as functions) ---
   SESSION: (mode?: string) =>
-    `${BASE_PATHS.STUDENT}/study/session-id${
-      mode ? `?mode=${mode}` : ''
-    }`,
-  RESULT: () =>
-    `${BASE_PATHS.STUDENT}/study/session-id/result`,
+    `${BASE_PATHS.STUDENT}/study/session-id${mode ? `?mode=${mode}` : ''}`,
+  RESULT: () => `${BASE_PATHS.STUDENT}/study/session-id/result`,
   POST: (slug: string) => `${BASE_PATHS.BLOG}/${slug}`,
   PROFILE: (username: string) => `${BASE_PATHS.USER}/${username}`,
 };
@@ -49,6 +46,8 @@ export const SERVER = {
   TAGS: `${BASE_PATHS.QUIZ}/tags`,
   ACTIVE_SESSION: `${BASE_PATHS.QUIZ}/sessions/active`,
   NEW_SESSION: `${BASE_PATHS.QUIZ}/sessions/new`,
+  DELETE_SESSION: (session_id: string) =>
+    `${BASE_PATHS.QUIZ}/sessions/${session_id}`,
   REVIEW_SESSION: `${BASE_PATHS.QUIZ}/sessions/review`,
   MIXED_SESSION: `${BASE_PATHS.QUIZ}/sessions/mixed`,
 
@@ -56,5 +55,6 @@ export const SERVER = {
     `${BASE_PATHS.QUIZ}/sessions/${session_id}/answer`,
   RESUME_SESSION: (session_id: string) =>
     `${BASE_PATHS.QUIZ}/sessions/${session_id}/resume`,
-  GET_ANSWER: (question_id: string) => `${BASE_PATHS.QUIZ}/questions/${question_id}/feedback`
+  GET_ANSWER: (question_id: string) =>
+    `${BASE_PATHS.QUIZ}/questions/${question_id}/feedback`,
 };

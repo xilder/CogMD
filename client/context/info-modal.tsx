@@ -67,7 +67,7 @@ const InfoModal = () => {
         className={`fixed inset-0 top-0 left-0 z-9999 flex h-screen w-screen items-center justify-center bg-[rgba(0,0,0,0.0.8)] p-2 `}
       >
         <div
-          className={`flex max-h-[800px] lg:min-w-50 flex-col items-center justify-center gap-4 rounded-[15px] border-6 p-8 text-3xl font-bold lg:w-[864px] ${getStyle(
+          className={`flex max-h-[800px] lg:min-w-50 flex-col items-center justify-center gap-4 rounded-[15px] border p-2 px-4 text-lg font-bold ${getStyle(
             type
           )}`}
         >
@@ -75,7 +75,7 @@ const InfoModal = () => {
             onClick={() => setInfo(null, null)}
             className='border-0.5 flex items-center justify-start self-end justify-self-start'
           >
-            <X strokeWidth={5} size={30} />
+            <X strokeWidth={4} size={10} />
           </button>
           <p>{message}</p>
         </div>

@@ -10,7 +10,12 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CLIENT } from '@/lib/routes';
 import { capitaliseWords } from '@/lib/utils';
-import { getAnswer, resumeSession, submitAnswer } from '@/services/api';
+import {
+  deleteSession,
+  getAnswer,
+  resumeSession,
+  submitAnswer,
+} from '@/services/api';
 import type {
   AnswerSubmissionRequest,
   QuizQuestion,
@@ -105,7 +110,8 @@ export default function QuizPageRefactor() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = (searchParams.get('mode') || 'review').toLowerCase() as QuizMode;
-  const { setTestResult, setTotalTime } = useQuestionContext();
+  const { setTestResult, setTotalTime, testResult, totalTime } =
+    useQuestionContext();
 
   // Query to get questions left in the session
   const questionsLeft = useQuery({
@@ -196,6 +202,17 @@ export default function QuizPageRefactor() {
   // Initialize questions and history when data is loaded
   useEffect(() => {
     if (!questionsLeft.isSuccess) return;
+    if (!questionsLeft.data.questions.length) {
+      try {
+        (async () => {
+          await deleteSession(sessionId);
+        })();
+      } catch (e) {
+        console.error('Error deleting empty session:', e);
+      }
+      router.replace(CLIENT.STUDY);
+      return;
+    }
     const data = questionsLeft.data.questions.sort((a, b) =>
       !!a.option_picked_id && !b.option_picked_id
         ? -1
@@ -410,6 +427,7 @@ export default function QuizPageRefactor() {
 
     setTestResult(testResults);
     setTotalTime(formatted);
+    console.log(testResult, totalTime)
 
     sessionStorage.setItem('testResults', JSON.stringify(testResults));
     sessionStorage.setItem('totalTime', formatted);

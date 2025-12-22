@@ -23,21 +23,21 @@ export default function ResultsPage() {
   const [selectedQuestion, setSelectedQuestion] = useState<TestResult | null>(
     null
   );
-  // const [testResult, setTestResult] = useState<TestResult[]>([]);
-  // const [totalTime, setTotalTime] = useState<string>('00:00');
+  const [testResult, setTestResult] = useState<TestResult[]>([]);
+  const [totalTime, setTotalTime] = useState<string>('00:00');
 
   const [correctCount, setCorrectCount] = useState(0);
   const [accuracy, setAccuracy] = useState(0);
-  const { testResult, totalTime } = useQuestionContext();
+  // const { testResult, totalTime } = useQuestionContext();
 
-  // useEffect(() => {
-  //   const results = sessionStorage.getItem('testResults');
-  //   const time = sessionStorage.getItem('totalTime');
-  //   if (results) {
-  //     setTestResult(JSON.parse(results));
-  //   }
-  //   if (time) setTotalTime(time);
-  // }, []);
+  useEffect(() => {
+    const results = sessionStorage.getItem('testResults');
+    const time = sessionStorage.getItem('totalTime');
+    if (results) {
+      setTestResult(JSON.parse(results));
+    }
+    if (time) setTotalTime(time);
+  }, []);
 
   useEffect(() => {
     setCorrectCount(testResult.filter((r) => r.isCorrect).length);

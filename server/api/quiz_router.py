@@ -1,7 +1,7 @@
 # app/api/quiz_router.py
 
-from os import error
 import uuid
+from os import error
 from pprint import pprint
 from typing import Annotated, Any, cast
 
@@ -259,6 +259,8 @@ async def submit_answer(
         response = await supabase.rpc("process_answer_submission", rpc_params).execute()
 
         if not response.data:
+            pprint(
+                    response.data["error"])
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=(
@@ -276,9 +278,43 @@ async def submit_answer(
             explanation=result["explanation"],
         )
     except Exception as e:
+        pprint(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+
+
+@router.delete("/sessions/{session_id}", status_code=status.HTTP_200_OK)
+async def delete_quiz_session(
+    session_id: uuid.UUID,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
+    """
+    Deletes a quiz session and all associated data for the current user.
+    """
+    user_id = current_user.id
+    try:
+        delete_res = (
+            await supabase.table("user_quiz_sessions")
+            .delete()
+            .eq("id", str(session_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if delete_res.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete the session.",
+            )
+
+        return {"message": "Session deleted successfully."}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )        
 
 
 @router.get("/sessions/{session_id}/resume", response_model=SessionResponse)
@@ -322,6 +358,7 @@ async def resume_quiz_session(
         questions_data = (
             unanswered_questions_res.data if unanswered_questions_res.data else []
         )
+        # pprint(f'Session ID: {session_id}\nQuestions: {questions_data}')
 
         return SessionResponse(session_id=session_id, questions=questions_data)
 

@@ -30,6 +30,7 @@ let refreshQueue: ((token: string) => void)[] = [];
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
+  sessionStorage.setItem('accessToken', token ?? '');
 };
 
 const publicUrls = [
@@ -54,6 +55,8 @@ const config: AxiosRequestConfig = {
 const api = axios.create(config);
 
 api.interceptors.request.use((config) => {
+  if (!accessToken)
+    accessToken = sessionStorage.getItem('accessToken') ?? '';
   if (accessToken && config.headers && !(config as { _retry?: boolean })._retry)
     config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
@@ -202,6 +205,13 @@ export const resumeSession = async (sessionId: string) => {
   );
   return data;
 };
+
+export const deleteSession = async (sessionId: string) => {
+  const { data } = await api.delete<{ message: string }>(
+    SERVER.DELETE_SESSION(sessionId)
+  );
+  return data;
+}
 
 export const submitAnswer = async ({
   sessionId,
