@@ -2,6 +2,7 @@
 
 import { getProfile, logout } from '@/services/api';
 import { User } from '@/types/schemas';
+import { useRouter } from 'next/router';
 import {
   createContext,
   ReactNode,
@@ -23,6 +24,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [justLoggedOut, setJustLoggedOut] = useState(false);
@@ -58,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(profile);
         } catch {
           setUser(null);
+          router.push('/login');
         } finally {
           setIsLoading(false);
         }
