@@ -427,7 +427,6 @@ export default function QuizPageRefactor() {
 
     setTestResult(testResults);
     setTotalTime(formatted);
-    console.log(testResult, totalTime)
 
     sessionStorage.setItem('testResults', JSON.stringify(testResults));
     sessionStorage.setItem('totalTime', formatted);
@@ -494,11 +493,8 @@ export default function QuizPageRefactor() {
                       {/* Option Picked */}
                       <p className='text-sm mb-2'>
                         <span className='font-bold'>Option Picked:</span>
-                        {qState.question?.option_picked_id ? (
-                          qState.question?.options.find(
-                            (opt) =>
-                              opt.id === qState.question?.option_picked_id
-                          )?.option_text || qState.question?.option_picked_id
+                        {qState.question?.option_picked_id && qState.id ? (
+                          answers[qState.id]
                         ) : (
                           <span className='text-gray-500'>Not Answered</span>
                         )}
@@ -682,7 +678,6 @@ export default function QuizPageRefactor() {
                   <Button
                     onClick={() => {
                       handleEnd();
-                      router.push(CLIENT.RESULT());
                     }}
                     disabled={
                       (mode !== 'test' &&
