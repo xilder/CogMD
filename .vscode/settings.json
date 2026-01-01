@@ -1,0 +1,6 @@
+{
+  "tailwindcss-intellisense.trace.server": "messages",
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.lint.invalidApply": "error",
+  "tailwindCSS.showPixelEquivalents": true
+}

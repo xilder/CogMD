@@ -1,6 +1,7 @@
 'use client';
 
 import Loading from '@/app/loading';
+import StatusScreen from '@/components/status-screen';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useModalInfo } from '@/context/info-modal';
 import { CLIENT } from '@/lib/routes';
 import { capitaliseWords } from '@/lib/utils';
 import {
@@ -21,13 +21,16 @@ import {
 } from '@/services/api';
 import { NewSessionRequest } from '@/types/schemas';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuestionContext } from '../layout';
 
 export default function StudyPage() {
-  const { setInfo } = useModalInfo();
+  // const { setInfo } = useModalInfo();
+  const [statusConfig, setStatusConfig] = useState<React.ComponentProps<
+    typeof StatusScreen
+  > | null>(null);
   const { setSessionIdFn } = useQuestionContext();
   const getSpecialtyFromId = (id: string) =>
     specialtyList?.filter((specialty) => specialty.id === id)[0].name;
@@ -61,37 +64,85 @@ export default function StudyPage() {
     mutationKey: ['quiz', 'type'],
     onSuccess: (data, variables) => {
       if (!data.session_id) {
-        setInfo(
-          'info',
-          variables.type === 'test'
-            ? `No more new questions ${
-                variables.tag_id
-                  ? `for ${getSpecialtyFromId(variables.tag_id)}`
-                  : ''
-              }.`
-            : `Not enough review questions for ${getSpecialtyFromId(
-                variables.tag_id as string
-              )}`
-        );
-        // const timer = setTimeout(() => router.replace(CLIENT.STUDY), 10000)
+        const specialtyName = variables.tag_id
+          ? getSpecialtyFromId(variables.tag_id)
+          : 'this topic';
+
+        if (variables.type === 'test') {
+          setStatusConfig({
+            variant: 'success',
+            icon: CheckCircle,
+            title: 'All Caught Up!',
+            message: `Congratulations! You've completed all the new questions for ${specialtyName}. You can now review your knowledge or pick a different specialty.`,
+            actions: [
+              {
+                label: 'Review This Topic',
+                onClick: () => {
+                  setStatusConfig(null);
+                  getSession.mutate({ ...variables, type: 'review' });
+                },
+                variant: 'default',
+              },
+              {
+                label: 'Choose New Topic',
+                onClick: () => {
+                  setStatusConfig(null);
+                  router.push(CLIENT.STUDY);
+                },
+                variant: 'outline',
+              },
+            ],
+          });
+        } else {
+          setStatusConfig({
+            variant: 'info',
+            icon: BookOpen,
+            title: 'Nothing to Review Yet',
+            message: `You're up to date! There are no questions currently due for review in ${specialtyName}. Try learning some new material instead.`,
+            actions: [
+              {
+                label: 'Start New Questions',
+                onClick: () => {
+                  setStatusConfig(null);
+                  getSession.mutate({ ...variables, type: 'test' });
+                },
+                variant: 'default',
+              },
+              {
+                label: 'Back to Dashboard',
+                onClick: () => router.push(CLIENT.DASHBOARD),
+                variant: 'outline',
+              },
+            ],
+          });
+        }
       } else {
         setSessionIdFn(data.session_id);
-        // router.push(CLIENT.SESSION(data.session_id, variables.type));
       }
     },
-    onError: (_, variables) =>
-      setInfo(
-        'info',
-        variables.type === 'test'
-          ? `No more new questions ${
-              variables.tag_id
-                ? `for ${getSpecialtyFromId(variables.tag_id)}`
-                : ''
-            }. Please try reviewing other questions or try another specialties.`
-          : `Not enough review questions for ${getSpecialtyFromId(
-              variables.tag_id as string
-            )}. Please try answering more new questions.`
-      ),
+    onError: (_, variables) => {
+      setStatusConfig({
+        variant: 'error',
+        title: 'Unable to Start Session',
+        message:
+          'We encountered an issue connecting to the server. Please check your internet connection and try again.',
+        actions: [
+          {
+            label: 'Try Again',
+            onClick: () => {
+              setStatusConfig(null);
+              getSession.mutate(variables);
+            },
+            variant: 'default',
+          },
+          {
+            label: 'Go Home',
+            onClick: () => router.push(CLIENT.DASHBOARD),
+            variant: 'outline',
+          },
+        ],
+      });
+    },
   });
 
   useEffect(() => {
@@ -102,6 +153,9 @@ export default function StudyPage() {
   const router = useRouter();
 
   if (activeSession.isLoading) return <Loading />;
+  if (statusConfig) {
+    return <StatusScreen {...statusConfig} />;
+  }
   return (
     <main className='flex-1 overflow-auto'>
       <div className='p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto'>

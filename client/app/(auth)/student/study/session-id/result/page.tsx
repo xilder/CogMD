@@ -2,6 +2,7 @@
 
 import Loading from '@/app/loading';
 import QuizFeedback from '@/components/quiz-feedback';
+import StatusScreen from '@/components/status-screen';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,39 +13,73 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CLIENT } from '@/lib/routes';
+import { getResult } from '@/services/api';
 import { TestResult } from '@/types/schemas';
+import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useQuestionContext } from '../../../layout';
+import { useState } from 'react';
 
 export default function ResultsPage() {
   const router = useRouter();
+  const sessionId = sessionStorage.getItem('sessionID') || '';
   const [selectedQuestion, setSelectedQuestion] = useState<TestResult | null>(
     null
   );
-  const [testResult, setTestResult] = useState<TestResult[]>([]);
-  const [totalTime, setTotalTime] = useState<string>('00:00');
+  // const [testResult, setTestResult] = useState<TestResult[]>([]);
+  // const [totalTime, setTotalTime] = useState<string>('00:00');
 
-  const [correctCount, setCorrectCount] = useState(0);
-  const [accuracy, setAccuracy] = useState(0);
+  // const [correctCount, setCorrectCount] = useState(0);
+  // const [accuracy, setAccuracy] = useState(0);
   // const { testResult, totalTime } = useQuestionContext();
 
-  useEffect(() => {
-    const results = sessionStorage.getItem('testResults');
-    const time = sessionStorage.getItem('totalTime');
-    if (results) {
-      setTestResult(JSON.parse(results));
-    }
-    if (time) setTotalTime(time);
-  }, []);
+  const results = useQuery({
+    queryKey: ['quiz', 'session', 'result'],
+    queryFn: () => getResult(sessionId),
+  });
 
-  useEffect(() => {
-    setCorrectCount(testResult.filter((r) => r.isCorrect).length);
-    setAccuracy(Math.round((correctCount / testResult.length) * 100));
-  }, [testResult, correctCount]);
+  if (results.isLoading) return <Loading />;
+  const totalTimeMs =
+    results.data?.reduce((a, b) => a + (b.timeToAnswerMs || 0), 0) || 0;
+  const minutes = Math.floor(totalTimeMs / 60000);
+  const seconds = Math.floor((totalTimeMs % 60000) / 1000);
+  const totalTime = `${minutes.toString().padStart(2, '0')}:${seconds
+    .toString()
+    .padStart(2, '0')}`;
+  const testResult = results.data || [];
+  const correctCount = testResult.filter((r) => r.isCorrect).length;
+  const accuracy = Math.round((correctCount / testResult.length) * 100);
 
-  if (testResult.length === 0) return <Loading />;
+  if (results.isError) {
+    return (
+      <StatusScreen
+        message="We couldn't find any test data for this session. This usually happens if the session was interrupted or the page was refreshed."
+        variant='error'
+        actions={[
+          {
+            label: 'Back to Study',
+            onClick: () => router.push(CLIENT.STUDY),
+            variant: 'outline',
+          },
+        ]}
+      />
+    );
+  }
+  // useEffect(() => {
+  //   const results = sessionStorage.getItem('testResults');
+  //   const time = sessionStorage.getItem('totalTime');
+  //   if (results) {
+  //     setTestResult(JSON.parse(results));
+  //   }
+  //   if (time) setTotalTime(time);
+  // }, []);
+
+  // useEffect(() => {
+  //   setCorrectCount(testResult.filter((r) => r.isCorrect).length);
+  //   setAccuracy(Math.round((correctCount / testResult.length) * 100));
+  // }, [testResult, correctCount]);
+
+  // if (testResult.length === 0) return <Loading />;
 
   return (
     <div className='min-h-screen bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 py-8'>

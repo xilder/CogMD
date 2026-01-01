@@ -32,3 +32,19 @@ export const handleGoogleLogin = async () => {
 
   window.location.href = `${supabaseUrl}/auth/v1/authorize?${params.toString()}`;
 };
+
+export const debounceFunction = <T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null;
+
+  return (...args: Parameters<T>) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };}

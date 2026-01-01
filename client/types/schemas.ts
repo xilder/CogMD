@@ -7,11 +7,13 @@ export type User = {
   username: string | null;
   full_name: string | null;
   email: string;
-  avatar_url: string | null;
   plan: 'free' | 'premium';
   xp_points: number;
   created_at: string;
   last_login: string;
+  send_email: boolean;
+  avatar_url: string | null;
+  send_notification: boolean;
 };
 
 export interface AuthResponse {
@@ -20,6 +22,26 @@ export interface AuthResponse {
 }
 
 // --- Core Content Models ---
+
+export const contactUsSchema = z
+  .object({
+    full_name: z
+      .string('')
+      .min(3, {
+        message: 'Full name must be at least 3 characters long.',
+      })
+      .trim()
+      .regex(/\s+/, {
+        message: 'Please enter both a first name and a last name.',
+      }),
+    email: z.email(),
+    message: z.string('').min(10, {
+      message: 'Message must be at least 10 characters long.',
+    }),
+  })
+
+
+  export type ContactUsForm = z.infer<typeof contactUsSchema>;
 
 export type Tag = {
   /**
@@ -176,7 +198,7 @@ export type SessionResponse = {
   /** Type for the response when a session's questions are requested. */
   session_id: string | null;
   questions: QuizQuestion[];
-  timeLeft: number | null
+  timeLeft: number | null;
 };
 
 export type SessionCreateResponse = {
@@ -210,8 +232,9 @@ export type TestResult = {
   userAnswer: string;
   correctAnswer: string;
   isCorrect: boolean;
-  explanation: string | undefined;
-}
+  explanation: string | null;
+  timeToAnswerMs: number;
+};
 
 export type ProgressUpdateResponse = {
   /** Type for the response after submitting an answer. */
@@ -239,13 +262,18 @@ export interface DashboardStatItem {
   change: number;
 }
 
+export type WeeklyAccuracyItem = {
+  date: string;
+  accuracy: number;
+};
+
 export type DashboardStatsResponse = {
   overallProgress: DashboardStatItem;
   questionsAnswered: DashboardStatItem;
   accuracyRate: DashboardStatItem;
   studyStreak: DashboardStatItem;
   weeklyProgress: WeeklyProgressItem[];
-  weeklyAccuracy: number[];
+  weeklyAccuracy: WeeklyAccuracyItem[];
 };
 
 export interface AdminDashboardStats {

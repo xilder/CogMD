@@ -1,10 +1,10 @@
 'use client';
 
+import { useDashboard } from '@/app/(auth)/student/layout';
 import ActionCards from '@/components/action-cards';
 import KPICards from '@/components/kpi-cards';
 import ProgressChart from '@/components/progress-chart';
 import { useAuth } from '@/context/auth-context';
-import { useDashboard } from '@/app/(auth)/student/layout';
 
 export default function DashboardPage() {
   const { stats } = useDashboard();
@@ -35,7 +35,7 @@ export default function DashboardPage() {
               <ActionCards />
             </div>
             <div className='lg:col-span-2'>
-              <ProgressChart weeklyInfo={stats?.weeklyProgress} />
+              <ProgressChart />
             </div>
           </div>
         </div>

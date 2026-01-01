@@ -7,34 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { useDashboard } from '../layout';
-
-const progressData = [
-  { week: 'Week 1', accuracy: 65 },
-  { week: 'Week 2', accuracy: 68 },
-  { week: 'Week 3', accuracy: 71 },
-  { week: 'Week 4', accuracy: 74 },
-  { week: 'Week 5', accuracy: 76 },
-  { week: 'Week 6', accuracy: 78 },
-];
+import WeeklyAccuracyChart from '@/components/weekly-accuracy-chart';
 
 export default function ProgressPage() {
-  const { stats } = useDashboard();
-  const data =
-    stats?.weeklyProgress.map((accuracy, index) => ({
-      week: `Week ${index + 1}`,
-      accuracy,
-    })) || progressData;
   return (
     <>
       <main className='flex-1 overflow-auto'>
@@ -54,7 +29,7 @@ export default function ProgressPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width='100%' height={300}>
+              {/* <ResponsiveContainer width='100%' height={300}>
                 <LineChart data={data}>
                   <CartesianGrid
                     strokeDasharray='3 3'
@@ -80,7 +55,8 @@ export default function ProgressPage() {
                     name='Accuracy %'
                   />
                 </LineChart>
-              </ResponsiveContainer>
+              </ResponsiveContainer> */}
+              <WeeklyAccuracyChart />
             </CardContent>
           </Card>
         </div>

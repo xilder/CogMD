@@ -1,15 +1,19 @@
-import logging.config
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import logging
-from dotenv import load_dotenv
-from server.api import auth_router, dashboard_router, quiz_router
+import logging.config
 import os
+
+from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from server.api import auth_router, dashboard_router, quiz_router
+from server.db.db import get_supabase_client
+from server.models.schemas import ContactUsFormat
 
 load_dotenv()
 
 # logging.config.fileConfig("./server/logging.ini", disable_existing_loggers=False)
-# logger = logging.getLogger("app") 
+# logger = logging.getLogger("app")
 
 app = FastAPI(
     title="CognitoMD API",
@@ -40,10 +44,34 @@ app.add_middleware(
 #         raise
 
 app.include_router(auth_router.router, tags=["Authentication"])
-app.include_router(dashboard_router.router, tags=['Dashboard'])
+app.include_router(dashboard_router.router, tags=["Dashboard"])
 app.include_router(quiz_router.router, tags=["Quiz"])
 
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the CognitoMD API"}
+
+
+@app.post("/contact-us")
+async def contact_us(
+    contact_data: ContactUsFormat, supabase=Depends(get_supabase_client)
+):
+    """Endpoint to handle 'Contact Us' form submissions."""
+    try:
+        # Insert the contact data into the 'contact_messages' table
+        await supabase.table("contact_messages").insert(
+                {
+                    "full_name": contact_data.full_name,
+                    "email": contact_data.email,
+                    "message": contact_data.message,
+                }
+            ).execute()
+
+        return None
+    except Exception as e:
+        logging.exception(f"Unhandled error in contact_us endpoint: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred. Please try again later.",
+        )

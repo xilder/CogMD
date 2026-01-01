@@ -8,22 +8,21 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useModalInfo } from '@/context/info-modal';
 import { CLIENT } from '@/lib/routes';
-import {
-  getActiveSession,
-  startMixedSession,
-  startNewSession,
-  startReviewSession,
-} from '@/services/api';
+import { getActiveSession, startNewSession } from '@/services/api';
 import { NewSessionRequest } from '@/types/schemas';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { BookOpen, Lightbulb } from 'lucide-react';
+import { BookOpen, CheckCircle, Lightbulb } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import StatusScreen from './status-screen';
 
 export default function ActionCards() {
   const router = useRouter();
-  const { setInfo } = useModalInfo();
+  // const { setInfo } = useModalInfo();
+  const [statusConfig, setStatusConfig] = useState<React.ComponentProps<
+    typeof StatusScreen
+  > | null>(null);
   const { setSessionIdFn } = useQuestionContext();
   const activeSession = useQuery({
     queryKey: ['quiz', 'session', 'active'],
@@ -41,20 +40,42 @@ export default function ActionCards() {
       limit,
       type,
     }: NewSessionRequest & { type: 'test' | 'review' | 'tutor' }) => {
-      if (type === 'test') return startNewSession({ tag_id, limit });
-      else if (type === 'review') return startReviewSession({ tag_id, limit });
-      else return startMixedSession({ tag_id, limit });
+      return startNewSession({ tag_id, limit });
     },
     mutationKey: ['quiz', 'type'],
     onSuccess: (data, variables) => {
-      if (!data.session_id) setInfo('info', `No more new questions.`);
-      else {
+      if (!data.session_id) {
+        setStatusConfig({
+          variant: 'success',
+          icon: CheckCircle,
+          title: 'All Caught Up!',
+          message: `Congratulations! You've completed all the new questions. You can now review your knowledge or pick a different specialty.`,
+          actions: [
+            {
+              label: 'Review Other Topics',
+              onClick: () => {
+                setStatusConfig(null);
+                getSession.mutate({ ...variables, type: 'review' });
+              },
+              variant: 'default',
+            },
+            {
+              label: 'Choose New Topic',
+              onClick: () => router.push(CLIENT.STUDY),
+              variant: 'outline',
+            },
+          ],
+        });
+      } else {
         setSessionIdFn(data.session_id);
         router.push(CLIENT.SESSION(variables.type));
       }
     },
   });
   if (activeSession.isLoading) return <Loading />;
+  if (statusConfig) {
+    return <StatusScreen {...statusConfig} />;
+  }
   return (
     <div className='space-y-4'>
       <Card className='hover:shadow-md transition-shadow'>

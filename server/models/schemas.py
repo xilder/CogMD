@@ -1,3 +1,4 @@
+import string
 import uuid
 from datetime import datetime
 from typing import Any, Literal
@@ -24,6 +25,12 @@ class User(BaseModel):
 
 
 # --- Core Content Models ---
+
+
+class ContactUsFormat(BaseModel):
+    full_name: str
+    email: EmailStr
+    message: str
 
 
 class Tag(BaseModel):
@@ -151,8 +158,11 @@ class UserAuthResponse(BaseModel):
     username: str
     full_name: str
     email: EmailStr
-    plan: str = 'free'
+    plan: str = "free"
     xp_points: int | None
+    send_email: bool
+    avatar_url: str | None
+    send_notification: bool
 
 
 class Token(BaseModel):
@@ -180,6 +190,14 @@ class LoginResponse(BaseModel):
     access_token: str
     # token_type: str = "bearer"
     user: UserAuthResponse
+
+
+class ChangePasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=6, description="The new password")
+
+
+class MailPreference(BaseModel):
+    preference: bool
 
 
 # --- Quiz Session Schemas ---
@@ -261,6 +279,16 @@ class QuestionFeedbackResponse(BaseModel):
     correct_option_id: uuid.UUID
 
 
+class TestResult(BaseModel):
+    questionId: uuid.UUID
+    questionText: str
+    userAnswer: str
+    correctAnswer: str
+    isCorrect: bool
+    explanation: str | None
+    timeToAnswerMs: int
+
+
 # Dashboard view
 
 
@@ -281,10 +309,15 @@ class WeeklyProgressItem(BaseModel):
     incorrect: int
 
 
+class WeeklyAccuracyItem(BaseModel):
+    date: str
+    accuracy: float
+
+
 class DashboardStatsResponse(BaseModel):
     overallProgress: DashboardStatItem
     questionsAnswered: DashboardStatItem
     accuracyRate: DashboardStatItem
     studyStreak: DashboardStatItem
     weeklyProgress: list[Any]
-    weeklyAccuracy: list[float]
+    weeklyAccuracy: list[WeeklyAccuracyItem]

@@ -25,7 +25,9 @@ async def get_own_profile(
 ):
     _profile_response = (
         await supabase.table("user")
-        .select("id, full_name, email, username, plan, xp_points")
+        .select(
+            "id, full_name, username, plan, xp_points, send_email, avatar_url, send_notification, email"
+        )
         .eq("id", current_user.id)
         .single()
         .execute()
@@ -52,7 +54,7 @@ async def get_user_dashboard_stats(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Could not retrieve dashboard stats for the user.",
-            ) 
+            )
         return response.data
 
     except Exception as e:

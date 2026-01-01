@@ -4,12 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/auth-context';
-import { useModalInfo } from '@/context/info-modal';
 import { CLIENT } from '@/lib/routes';
 import { handleGoogleLogin } from '@/lib/utils';
 import { login, register as registerFn } from '@/services/api';
 import {
-  BackendError,
   loginSchema,
   registerSchema,
   UserCreate,
@@ -21,7 +19,9 @@ import { AxiosError } from 'axios';
 import { Chrome, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import StatusScreen from './status-screen';
 
 interface AuthFormProps {
   type: 'login' | 'signup';
@@ -31,7 +31,10 @@ type FormValues = UserCreate & UserLogin;
 
 export default function AuthForm({ type }: AuthFormProps) {
   const router = useRouter();
-  const { setInfo } = useModalInfo();
+  // const { setInfo } = useModalInfo();
+  const [statusConfig, setStatusConfig] = useState<React.ComponentProps<
+    typeof StatusScreen
+  > | null>(null);
   const { updateUser } = useAuth();
 
   const { register, formState, handleSubmit } = useForm<FormValues>({
@@ -62,11 +65,40 @@ export default function AuthForm({ type }: AuthFormProps) {
     mutationKey: ['auth', 'login'],
     mutationFn: login,
     onSuccess: (data) => {
+      setStatusConfig({
+        variant: 'success',
+        title: 'Login Successful',
+        message: 'Welcome back! Redirecting to your dashboard...',
+        actions: [],
+      });
+
       updateUser(data.user);
-      router.push(CLIENT.DASHBOARD);
+      setTimeout(() => {
+        router.push(CLIENT.DASHBOARD);
+      }, 1000);
     },
     onError: (e: AxiosError) => {
-      setInfo('error', e.message);
+      const isAuthError =
+        e.response?.status === 401 || e.response?.status === 403;
+      const errorTitle = isAuthError ? 'Authentication Failed' : 'Login Error';
+      const errorMessage = isAuthError
+        ? 'Incorrect email or password. Please check your credentials and try again.'
+        : e.message ||
+          'We could not connect to the server. Please check your internet connection.';
+
+      setStatusConfig({
+        variant: 'error',
+        title: errorTitle,
+        message: errorMessage,
+        actions: [
+          {
+            label: 'Try Again',
+            onClick: () => setStatusConfig(null),
+            variant: 'default',
+          },
+          // { label: 'Forgot Password?', onClick: () => router.push(CLIENT.FORGOT_PASS), variant: 'ghost' }
+        ],
+      });
     },
   });
 
@@ -74,10 +106,41 @@ export default function AuthForm({ type }: AuthFormProps) {
     mutationKey: ['auth', 'register'],
     mutationFn: registerFn,
     onSuccess: (_) => {
-      router.push(CLIENT.LOGIN);
+      setStatusConfig({
+        variant: 'success',
+        title: 'Account Created!',
+        message:
+          'Your registration was successful. Verify your email and then log in to access your dashboard.',
+        actions: [
+          {
+            label: 'Go to Login',
+            onClick: () => router.push(CLIENT.LOGIN),
+            variant: 'default',
+          },
+        ],
+      });
     },
-    onError: (e) => {
-      setInfo('error', (e as BackendError).response.data.detail);
+    onError: (e: AxiosError<{ detail?: string }>) => {
+      const backendMsg = e.response?.data?.detail;
+      const genericMsg = 'We encountered an error creating your account.';
+
+      setStatusConfig({
+        variant: 'error',
+        title: 'Registration Failed',
+        message: backendMsg || genericMsg,
+        actions: [
+          {
+            label: 'Fix Details',
+            onClick: () => setStatusConfig(null),
+            variant: 'default',
+          },
+          {
+            label: 'Already have an account?',
+            onClick: () => router.push(CLIENT.LOGIN),
+            variant: 'ghost',
+          },
+        ],
+      });
     },
   });
 
@@ -105,6 +168,7 @@ export default function AuthForm({ type }: AuthFormProps) {
 
   //   window.location.href = url;
   // };
+  if (statusConfig) return <StatusScreen {...statusConfig} />;
 
   return (
     <Card className='border-border'>

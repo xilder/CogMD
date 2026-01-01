@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useModalInfo } from '@/context/info-modal';
 
 export default function LandingPage() {
-  const { setInfo } = useModalInfo();
+  // const { setInfo } = useModalInfo();
   // useEffect(() => {
   //   const showGreeting = async () => {
   //     try {

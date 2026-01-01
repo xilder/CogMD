@@ -1,6 +1,7 @@
 # app/api/auth_router.py
-from os import access
 import os
+from os import access
+from pprint import pprint
 from typing import Annotated, Any, cast
 
 from fastapi import (
@@ -13,17 +14,24 @@ from fastapi import (
     status,
 )
 from fastapi.responses import RedirectResponse
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
 from gotrue.errors import AuthApiError
 from jose import JWTError, jwt
 from postgrest import APIResponse
 from supabase import AsyncClient
 
 from server.core.config import settings
+from server.core.dependencies import get_current_user
 from server.db.db import get_supabase_client
 
 # Import our new, specific schemas and dependencies
 from server.models.schemas import (
+    ChangePasswordRequest,
     LoginResponse,
+    MailPreference,
     OAuthCallback,
     Token,
     UserAuthResponse,
@@ -33,7 +41,7 @@ from server.models.schemas import (
 
 # Initialize the router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-origin_url = os.environ.get("ORIGIN_URL", "http://localhost:3000") 
+origin_url = os.environ.get("ORIGIN_URL", "http://localhost:3000")
 
 
 # --- Helper function to set the secure cookie ---
@@ -140,7 +148,9 @@ async def login_for_access_token(
         # Fetch the public profile to return alongside the token
         profile_response = (
             await supabase.table("user")
-            .select("id, full_name, username, plan, xp_points")
+            .select(
+                "id, full_name, username, plan, xp_points, send_email, avatar_url, send_notification, email"
+            )
             .eq("id", str(user.id))
             .single()
             .execute()
@@ -231,7 +241,7 @@ async def google_callback(
             "avatar_url": user.get("user_metadata", None).get("avatar_url"),
             "username": user.get("user_metadata", None).get("email", "").split("@")[0],
             "email": user.get("user_metadata", None).get("email", ""),
-            "last_login": "now()"
+            "last_login": "now()",
         }
         profile_response = await supabase.table("user").upsert(profile_data).execute()
 
@@ -287,7 +297,9 @@ async def refresh_access_token(
     This allows the user's session to be extended without requiring them to log in again.
     """
     if cognito_refresh_token is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorised")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorised"
+        )
 
     authorisation = request.headers.get("authorization", None)
 
@@ -323,3 +335,78 @@ async def refresh_access_token(
     except AuthApiError:
         remove_refresh_token_cookie(response)
         await supabase.auth.sign_out()
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(
+    password_data: ChangePasswordRequest,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    token: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
+):
+    """
+    Changes the user's password.
+    Requires an authenticated user (current_user).
+    """
+
+    token = token.credentials
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+    try:
+        await supabase.auth.set_session(access_token=token, refresh_token=token)
+        await supabase.auth.update_user({"password": password_data.new_password})
+        return None
+
+    except AuthApiError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+@router.post("/send-email", status_code=status.HTTP_204_NO_CONTENT)
+async def toggle_send_email(
+    send_email: MailPreference,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
+    """
+    Toggles the user's preference for receiving emails.
+    """
+    try:
+        await supabase.table("user").update({"send_email": send_email.preference}).eq(
+            "id", current_user.id
+        ).execute()
+        return None
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+@router.post("/send-notification", status_code=status.HTTP_204_NO_CONTENT)
+async def toggle_send_notification(
+    send_notification: MailPreference,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
+    """
+    Toggles the user's preference for receiving notifications.
+    """
+    try:
+        await supabase.table("user").update(
+            {"send_notification": send_notification.preference}
+        ).eq("id", current_user.id).execute()
+        return None
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )

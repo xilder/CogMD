@@ -5,6 +5,7 @@ import {
   AnswerSubmissionRequest,
   AnswerSubmissionResponse,
   AuthResponse,
+  ContactUsForm,
   DashboardStatsResponse,
   DashboardSummary,
   NewSessionRequest,
@@ -12,6 +13,7 @@ import {
   QuestionFeedbackResponse,
   SessionCreateResponse,
   SessionResponse,
+  TestResult,
   User,
   UserCreate,
   UserLogin,
@@ -55,8 +57,7 @@ const config: AxiosRequestConfig = {
 const api = axios.create(config);
 
 api.interceptors.request.use((config) => {
-  if (!accessToken)
-    accessToken = sessionStorage.getItem('accessToken') ?? '';
+  if (!accessToken) accessToken = sessionStorage.getItem('accessToken') ?? '';
   if (accessToken && config.headers && !(config as { _retry?: boolean })._retry)
     config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
@@ -122,6 +123,30 @@ export const login = async (credentials: UserLogin) => {
   return data;
 };
 
+export const changePassword = async (new_password: string) => {
+  try {
+    await api.post(SERVER.CHANGEPASSWORD, { new_password });
+  } catch (e) {
+    throw e;
+  }
+};
+
+  export const toggleSendEmail = async (preference : boolean) => {
+    try {
+      await api.post(SERVER.TOGGLE_EMAIL_NOTIFICATIONS, { preference  });
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  export const toggleSendNotification = async (preference : boolean) => {
+    try {
+      await api.post(SERVER.TOGGLE_DAILY_REMINDERS, { preference  });
+    } catch (e) {
+      throw e;
+    }
+  }
+
 // export const getGoogleAuthUrl = async () => {
 //   const { data } = await api.get<{ url: string }>(SERVER.G_LOGIN);
 //   return data;
@@ -172,6 +197,7 @@ export const startNewSession = async ({
     tag_id,
     limit,
   });
+  if (data?.session_id) sessionStorage.setItem('sessionID', data?.session_id);
   return data;
 };
 
@@ -186,6 +212,7 @@ export const startReviewSession = async ({
       limit,
     }
   );
+  if (data?.session_id) sessionStorage.setItem('sessionID', data?.session_id);
   return data;
 };
 export const startMixedSession = async ({
@@ -196,6 +223,7 @@ export const startMixedSession = async ({
     tag_id,
     limit,
   });
+  if (data?.session_id) sessionStorage.setItem('sessionID', data?.session_id);
   return data;
 };
 
@@ -203,6 +231,7 @@ export const resumeSession = async (sessionId: string) => {
   const { data } = await api.get<SessionResponse>(
     SERVER.RESUME_SESSION(sessionId)
   );
+  sessionStorage.setItem('sessionID', sessionId);
   return data;
 };
 
@@ -211,7 +240,7 @@ export const deleteSession = async (sessionId: string) => {
     SERVER.DELETE_SESSION(sessionId)
   );
   return data;
-}
+};
 
 export const submitAnswer = async ({
   sessionId,
@@ -227,10 +256,16 @@ export const submitAnswer = async ({
   return data;
 };
 
+export const getResult = async (sessionId: string) => {
+  const { data } = await api.get<TestResult[]>(SERVER.GET_RESULT(sessionId));
+  return data;
+};
+
 export const getActiveSession = async () => {
   const { data } = await api.get<ActiveSessionResponse | null>(
     SERVER.ACTIVE_SESSION
   );
+  if (data?.id) sessionStorage.setItem('sessionID', data?.id);
   return data;
 };
 
@@ -255,5 +290,10 @@ export const getDashboardSummary = async () => {
   const { data } = await api.get<DashboardSummary>(SERVER.DASHBOARD_SUMMARY);
   return data;
 };
+
+// --- Public Functions ---
+export const contactUs = async (contactData: ContactUsForm) => {
+  await api.post(SERVER.CONTACT_US, {...contactData});
+}
 
 export default api;

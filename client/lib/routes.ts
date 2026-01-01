@@ -32,10 +32,13 @@ export const SERVER = {
   // --- Auth Routes ---
   REGISTER: `${BASE_PATHS.AUTH}/register`,
   LOGIN: `${BASE_PATHS.AUTH}/login`,
+  CHANGEPASSWORD: `${BASE_PATHS.AUTH}/change-password`,
   G_LOGIN: `${BASE_PATHS.AUTH}/google/login`,
   G_CALLBACK: `${BASE_PATHS.AUTH}/google/callback`,
   LOGOUT: `${BASE_PATHS.AUTH}/logout`,
   REFRESH_TOKEN: `${BASE_PATHS.AUTH}/refresh-token`,
+  TOGGLE_EMAIL_NOTIFICATIONS: `${BASE_PATHS.AUTH}/send-email`,
+  TOGGLE_DAILY_REMINDERS: `${BASE_PATHS.AUTH}/send-notification`,
 
   // --- Dashboard Routes ---
   DASHBOARD_STATS: `${BASE_PATHS.DASHBOARD}/stats`,
@@ -57,4 +60,8 @@ export const SERVER = {
     `${BASE_PATHS.QUIZ}/sessions/${session_id}/resume`,
   GET_ANSWER: (question_id: string) =>
     `${BASE_PATHS.QUIZ}/questions/${question_id}/feedback`,
+  GET_RESULT: (session_id: string) => `${BASE_PATHS.QUIZ}/results/${session_id}`,
+
+  // --- Public Routes ---  
+  CONTACT_US: '/contact-us',
 };

@@ -2,7 +2,8 @@
 
 import { getProfile, logout } from '@/services/api';
 import { User } from '@/types/schemas';
-import { useRouter } from 'next/router';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import {
   createContext,
   ReactNode,
@@ -24,7 +25,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const router = useRouter()
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [justLoggedOut, setJustLoggedOut] = useState(false);
@@ -49,33 +50,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (justLoggedOut) {
-      setIsLoading(false);
-      setUser(null);
-    } else {
-      const init = async () => {
-        try {
-          const profile = await getProfile();
-          setUser(profile);
-        } catch {
-          setUser(null);
-          router.push('/login');
-        } finally {
-          setIsLoading(false);
-        }
-      };
+  const userQuery = useQuery({
+  queryKey: ['userProfile'],
+  queryFn: getProfile
+})
 
-      init();
+ useEffect(() => {
+    if (userQuery.isSuccess && userQuery.data) {
+      setUser(userQuery.data);
     }
-    return () => {};
-  }, []);
+    if (userQuery.isError || !userQuery.data) {
+      setUser(null);
+    }
+  }, [userQuery.isSuccess, userQuery.isError, userQuery.data]);
 
   const value = useMemo(
     () => ({
       isAuthenticated: !!user,
       user,
-      isLoading,
+      isLoading: userQuery.isLoading,
       updateUser,
       clientLogout,
     }),

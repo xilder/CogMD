@@ -98,15 +98,15 @@ function buildTestResults(
           ? userOptionId === correctOptionId
           : false,
       explanation: explanations[q.id],
-      timeTakenMs: times[q.id] ?? 0,
+      timeToAnswerMs: times[q.id] ?? 0,
     } as TestResult;
   });
   return results;
 }
 
 export default function QuizPageRefactor() {
-  let { sessionId } = useQuestionContext();
-  sessionId = sessionId as string;
+  let sessId = useQuestionContext().sessionId;
+  const [sessionId, setSessionId] = useState<string>(sessId || '');
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = (searchParams.get('mode') || 'review').toLowerCase() as QuizMode;
@@ -114,9 +114,15 @@ export default function QuizPageRefactor() {
     useQuestionContext();
 
   // Query to get questions left in the session
+  const getSessionID = useCallback(() => {
+    if (sessionId) return sessionId;
+    const storedId = sessionStorage.getItem('sessionID') || '';
+    setSessionId(storedId);
+    return storedId;
+  }, []);
   const questionsLeft = useQuery({
     queryKey: ['quiz', 'session', 'questions-left', sessionId],
-    queryFn: () => resumeSession(sessionId),
+    queryFn: () => resumeSession(getSessionID()),
   });
 
   const [currIdx, setCurrIdx] = useState(0);
@@ -196,7 +202,7 @@ export default function QuizPageRefactor() {
   });
 
   useEffect(() => {
-    if (!sessionId) router.replace(CLIENT.STUDY);
+    if (questionsLeft.isError) router.replace(CLIENT.STUDY);
   }, []);
 
   // Initialize questions and history when data is loaded
@@ -468,7 +474,7 @@ export default function QuizPageRefactor() {
 
           <div>
             {Object.values(history).map((qState) => {
-              type Key = keyof QuizQuestion;
+              // type Key = keyof QuizQuestion;
               return (
                 <button
                   className='group relative inline-block m-1 p-2 border rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center flex-wrap'
@@ -482,19 +488,19 @@ export default function QuizPageRefactor() {
                   >
                     {qState.index + 1}
                   </p>
-                  <div className='absolute left-0 rounded opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity flex flex-col gap-1 border-0.5 p-5 bg-[#a3d5ff99] w-100'>
-                    <div>
-                      {/* Question Text */}
-                      <p className='text-sm mb-2'>
+                  <div className='absolute left-0 rounded opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity flex flex-col gap-1 border-0.5 p-5 bg-[#a3d5ff] w-100 z-5'>
+                    <div className='flex flex-col items-start text-justify'>
+                      <p className='text-sm mb-2 line-clamp-3'>
                         <span className='font-bold'>Question:</span>{' '}
                         {qState.question?.question_text}
                       </p>
 
-                      {/* Option Picked */}
                       <p className='text-sm mb-2'>
-                        <span className='font-bold'>Option Picked:</span>
-                        {qState.question?.option_picked_id && qState.id ? (
-                          answers[qState.id]
+                        <span className='font-bold'>Option Picked: </span>
+                        {qState.selected ? (
+                          qState.question?.options.find(
+                            (o) => o.id === answers[qState.id as string]
+                          )?.option_text
                         ) : (
                           <span className='text-gray-500'>Not Answered</span>
                         )}

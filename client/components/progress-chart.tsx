@@ -8,33 +8,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { DashboardStatsResponse } from '@/types/schemas';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import WeeklyProgressChart from './weekly-progress-chart';
 
-const mockData = [
-  { day: 'Mon', correct: 12, incorrect: 3 },
-  { day: 'Tue', correct: 15, incorrect: 2 },
-  { day: 'Wed', correct: 10, incorrect: 4 },
-  { day: 'Thu', correct: 18, incorrect: 1 },
-  { day: 'Fri', correct: 14, incorrect: 3 },
-  { day: 'Sat', correct: 16, incorrect: 2 },
-  { day: 'Sun', correct: 13, incorrect: 2 },
-];
-
-export default function ProgressChart({
-  weeklyInfo,
-}: {
-  weeklyInfo: DashboardStatsResponse['weeklyProgress'] | undefined;
-}) {
-  const data = weeklyInfo || mockData
+export default function ProgressChart() {
   return (
     <Card>
       <CardHeader>
@@ -42,7 +18,7 @@ export default function ProgressChart({
         <CardDescription>Your performance over the last 7 days</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width='100%' height={300}>
+        {/* <ResponsiveContainer width='100%' height={300}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray='3 3' stroke='var(--color-border)' />
             <XAxis dataKey='day' stroke='var(--color-muted-foreground)' />
@@ -62,7 +38,8 @@ export default function ProgressChart({
               name='Incorrect'
             />
           </BarChart>
-        </ResponsiveContainer>
+        </ResponsiveContainer> */}
+        <WeeklyProgressChart />
       </CardContent>
     </Card>
   );

@@ -4,6 +4,7 @@ import uuid
 from os import error
 from pprint import pprint
 from typing import Annotated, Any, cast
+from urllib import response
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from postgrest import APIResponse
@@ -20,6 +21,7 @@ from server.models.schemas import (
     QuestionFeedbackResponse,
     SessionCreateResponse,
     SessionResponse,
+    TestResult,
 )
 
 router = APIRouter(prefix="/quiz", tags=["Quiz"])
@@ -401,3 +403,27 @@ async def get_question_feedback(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+
+
+@router.get("/results/{session_id}", response_model=list[TestResult])
+async def get_session_result(session_id: uuid.UUID, supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user)):
+    """"""
+    try:
+        rpc_params = {
+            "p_session_id": str(session_id),
+            "p_user_id": str(current_user.id)
+        }
+        response = await supabase.rpc("get_session_results", rpc_params).execute()
+
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Could not retrieve session result.",
+            ) 
+        return response.data
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
