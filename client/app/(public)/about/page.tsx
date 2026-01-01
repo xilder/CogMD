@@ -85,8 +85,8 @@ export default function AboutPage() {
                 <AvatarFallback>CF</AvatarFallback>
               </Avatar>
               <blockquote className="text-lg text-muted-foreground italic leading-relaxed">
-                "As someone who has been through the medical licensing journey, I wanted to create the tool I wish I
-                had. CognitoMD is that tool. My goal is to empower the next generation of UK doctors with a platform
+                "As someone who has been through the rigours of the medical school, I wanted to create the tool I wish I
+                had. CognitoMD is that tool. My goal is to empower the next generation of doctors with a platform
                 that is both powerful and completely free."
               </blockquote>
             </div>
