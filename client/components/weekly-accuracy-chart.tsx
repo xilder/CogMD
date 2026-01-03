@@ -98,9 +98,6 @@ export default function WeeklyAccuracyChart() {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    font: {
-      family: 'Montserrat',
-    },
     plugins: {
       legend: {
         display: false,

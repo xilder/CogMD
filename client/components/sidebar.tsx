@@ -5,6 +5,8 @@ import { useAuth } from '@/context/auth-context';
 import { CLIENT } from '@/lib/routes';
 import { BarChart3, BookOpen, Home, LogOut, Settings, X } from 'lucide-react';
 import Link from 'next/link';
+import Logo from "@/public/brain-white.png"
+import Image from "next/image"
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,12 +29,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       <aside className='hidden md:flex w-64 bg-sidebar border-r border-sidebar-border flex-col'>
         <div className='p-6 border-b border-sidebar-border'>
           <Link href='/' className='flex items-center gap-2'>
-            <div className='w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center'>
-              <span className='text-sidebar-primary-foreground font-bold'>
-                C
-              </span>
-            </div>
-            <span className='font-bold text-lg text-sidebar-foreground'>
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                      {/* <span className="text-primary-foreground font-bold text-lg">C</span> */}
+                      <Image src={Logo} alt={"Brain Logo"} className="object-fit"/>
+                    </div>
+            <span className='font-bold text-lg text-sidebar-foreground self-end'>
               CognitoMD
             </span>
           </Link>

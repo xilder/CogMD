@@ -4,6 +4,8 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
+import Logo from "@/public/brain-white.png"
+import Image from "next/image"
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -12,11 +14,12 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-background border-b border-border">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">C</span>
+        <Link href="/" className="flex items-center gap-2 rounded-lg">
+          <div className="w-20 h-20 bg-primary rounded-lg flex items-center justify-center">
+            {/* <span className="text-primary-foreground font-bold text-lg">C</span> */}
+            <Image src={Logo} alt={"Brain Logo"} className="object-fit"/>
           </div>
-          <span className="font-bold text-xl text-foreground hidden sm:inline">CognitoMD</span>
+          <span className="font-bold text-xl self-end text-foreground hidden sm:inline mb-2">CognitoMD</span>
         </Link>
 
         {/* Desktop Navigation */}
