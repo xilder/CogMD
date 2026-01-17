@@ -147,7 +147,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     """Schema for user login."""
 
-    username: EmailStr
+    username: EmailStr | str
     password: str
 
 

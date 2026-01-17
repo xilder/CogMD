@@ -131,6 +131,22 @@ async def login_for_access_token(
     3. Returns JWT access and refresh tokens.
     """
     try:
+        if "@" not in form_data.username:
+            lookup_response = (
+                await supabase.table("user")
+                .select("email")
+                .eq("username", form_data.username)
+                .maybe_single()
+                .execute()
+            )
+            if lookup_response.data:
+                email_to_authenticate = lookup_response.data["email"]
+                form_data.username = email_to_authenticate
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect username or password",
+                )
         auth_response = await supabase.auth.sign_in_with_password(
             {"email": form_data.username, "password": form_data.password}
         )

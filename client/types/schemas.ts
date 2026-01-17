@@ -129,7 +129,7 @@ export const registerSchema = z
 export type UserCreate = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({
-  username: z.email(),
+  username: z.string(),
   password: z.string().min(1, 'Please enter your password'),
 });
 
