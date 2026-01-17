@@ -6,7 +6,6 @@ import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-import { useModalInfo } from '@/context/info-modal';
 
 export default function LandingPage() {
   // const { setInfo } = useModalInfo();
@@ -34,7 +33,7 @@ export default function LandingPage() {
           </h1>
           <p className='text-lg sm:text-xl text-muted-foreground mb-8 text-balance'>
             Free, comprehensive study platform designed for international
-            medical graduates. Learn smarter, not harder.
+            medical doctors. Learn smarter, not harder.
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
             <Link href='/signup'>

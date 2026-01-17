@@ -456,12 +456,12 @@ export default function QuizPageRefactor() {
 
   return (
     <div className='min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col z-5 w-screen fixed inset-0'>
-      <header className='bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4'>
+      <header className='bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-1 sm:px-6 py-6'>
         <div className='max-w-7xl mx-auto flex flex-col'>
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4'>
+          <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 mb-1'>
             <div className='flex-1'>
-              <Progress value={progress} className='h-2' />
-              <p className='text-sm text-muted-foreground mt-2'>
+              <Progress value={progress} className='h-1' />
+              <p className='text-sm text-muted-foreground mt-1'>
                 Question {qState.index + 1} of {questions.length}
               </p>
             </div>
@@ -472,6 +472,7 @@ export default function QuizPageRefactor() {
             </div>
           </div>
 
+<div className='flex items-center justify-between'>
           <div>
             {Object.values(history).map((qState) => {
               // type Key = keyof QuizQuestion;
@@ -520,17 +521,6 @@ export default function QuizPageRefactor() {
               );
             })}
           </div>
-
-          <div className='flex items-center justify-between'>
-            {mode === 'test' && (
-              <div className='flex items-center gap-2 text-foreground'>
-                <Clock size={20} />
-                <CountdownTimer
-                  initialSeconds={seconds as number}
-                  onComplete={handleEnd}
-                />
-              </div>
-            )}
             <div className='ml-auto'>
               <Button
                 variant='ghost'
@@ -544,16 +534,27 @@ export default function QuizPageRefactor() {
                 <X size={18} />
                 <span className='ml-2'>End Session</span>
               </Button>
-            </div>
+            </div></div>
+
+          <div>
+            {mode === 'test' && (
+              <div className='flex items-center gap-2 text-foreground'>
+                <Clock size={20} />
+                <CountdownTimer
+                  initialSeconds={seconds as number}
+                  onComplete={handleEnd}
+                />
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      <main className='flex-1 overflow-auto px-4 sm:px-6 py-8'>
-        <div className='max-w-2xl mx-auto'>
-          <Card className='mb-6 shadow-sm'>
-            <CardContent className='pt-6'>
-              <h2 className='text-lg sm:text-xl font-semibold text-foreground mb-6 text-balance'>
+      <main className='flex-1 overflow-auto px-4 sm:px-6 py-6'>
+        <div className='max-w-2xl lg:max-w-4/5 mx-auto'>
+          <Card className='mb-3 shadow-sm'>
+            <CardContent className='pt-2'>
+              <h2 className='text-lg font-semibold text-foreground mb-3'>
                 {current.question_text}
               </h2>
 
@@ -562,7 +563,7 @@ export default function QuizPageRefactor() {
                 onValueChange={(v) => handleSelect(current.id, v)}
                 disabled={!!qState.showExplanation}
               >
-                <div className='space-y-3'>
+                <div className='space-y-3 grid lg:grid-cols-2 grid-cols-1 gap-x-3'>
                   {current.options.map((option) => (
                     <div
                       key={option.id}
@@ -591,7 +592,7 @@ export default function QuizPageRefactor() {
           </Card>
 
           {qState.showHint && mode === 'tutor' && (
-            <div className='p-2 my-4 border w-full rounded-10 shadow-sm'>
+            <div className='p-2 my-4 border w-full rounded-10 shadow-sm text-sm'>
               <p>{current.hint}</p>
             </div>
           )}

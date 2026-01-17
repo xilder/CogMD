@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BookOpen, Brain, BarChart3, Clock, Users, Zap } from "lucide-react"
+import { BarChart3, BookOpen, Brain, Clock, Users, Zap } from "lucide-react"
 
 const features = [
   {
@@ -25,7 +25,7 @@ const features = [
   {
     icon: Users,
     title: "Community Support",
-    description: "Connect with fellow medical graduates and share learning experiences",
+    description: "Connect with fellow medical doctors and share learning experiences",
   },
   {
     icon: Zap,

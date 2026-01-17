@@ -13,7 +13,7 @@ const montserrat = Montserrat({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'CognitoMD - PLAB Exam Study Platform',
   description:
-    'Free medical exam study app for international medical graduates preparing for PLAB',
+    'Free medical exam study app for international medical doctors preparing for PLAB',
   generator: 'v0.app',
 };
 

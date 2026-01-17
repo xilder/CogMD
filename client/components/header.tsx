@@ -12,10 +12,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 rounded-lg">
-          <div className="w-20 h-20 bg-primary rounded-lg flex items-center justify-center">
+          <div className="w-15 h-15 bg-primary rounded-lg flex items-center justify-center">
             {/* <span className="text-primary-foreground font-bold text-lg">C</span> */}
             <Image src={Logo} alt={"Brain Logo"} className="object-fit"/>
           </div>

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from server.api import auth_router, dashboard_router, quiz_router
+from server.api import auth_router, dashboard_router, quiz_router, telegram_router
 from server.db.db import get_supabase_client
 from server.models.schemas import ContactUsFormat
 
@@ -46,6 +46,7 @@ app.add_middleware(
 app.include_router(auth_router.router, tags=["Authentication"])
 app.include_router(dashboard_router.router, tags=["Dashboard"])
 app.include_router(quiz_router.router, tags=["Quiz"])
+app.include_router(telegram_router.router, tags=["Telegram"])
 
 
 @app.get("/")

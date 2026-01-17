@@ -90,7 +90,7 @@ Mastering these skills will not only boost your exam score but will also prepare
     title: 'Managing PLAB Prep Burnout: A Practical Guide for Busy Doctors',
     author: 'Dr. Priya Patel',
     publishedDate: '2024-01-05',
-    content: `Preparing for the PLAB exam is a marathon, not a sprint. For many international medical graduates, this preparation happens alongside a demanding full-time job, family commitments, and the stress of a major life transition. It's a recipe for burnout.
+    content: `Preparing for the PLAB exam is a marathon, not a sprint. For many international medical doctors, this preparation happens alongside a demanding full-time job, family commitments, and the stress of a major life transition. It's a recipe for burnout.
 
 Recognizing the signs of burnout—exhaustion, cynicism, and a feeling of ineffectiveness—is the first step. But preventing it requires a proactive strategy. Here are three practical, evidence-based tips to manage your energy and maintain your well-being during your PLAB journey.
 

@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 # ====================================================
 # CONFIG
 # ====================================================
-API_KEY = "AIzaSyCc9ITjrqLfB4VvSXbpsJQWCWlMsnF4Y3g"
+API_KEY = "AIzaSyCsxOFaH-g3BjAtmMckpuXJLNdY3Gct_d4"
 INPUT_FILE = "unprocessed_questions_file.json"
 OUTPUT_FILE = "output.json"
 REMAINING_FILE = "remaining_file.json"

@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="font-bold text-lg mb-4">CognitoMD</h3>
-            <p className="text-muted-foreground text-sm">Empowering medical graduates to achieve their dreams.</p>
+            <p className="text-muted-foreground text-sm">Empowering medical doctors to achieve their dreams.</p>
           </div>
           <div>
             <h4 className="font-semibold mb-4">Product</h4>

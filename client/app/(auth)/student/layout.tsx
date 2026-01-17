@@ -92,7 +92,7 @@ const StudentLayout = ({ children }: { children: React.ReactNode }) => {
             />
 
             <div className='flex-1 flex flex-col overflow-y-scroll'>
-              <MemoDashboardHeader onMenuClick={() => toggleSidebar()} />
+              {/* <MemoDashboardHeader onMenuClick={() => toggleSidebar()} /> */}
               <div>{children}</div>
             </div>
           </div>

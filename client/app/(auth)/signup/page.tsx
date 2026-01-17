@@ -12,7 +12,7 @@ export default function SignupPage() {
           <div className='w-full max-w-md'>
             <div className='text-center mb-8'>
             <div className='rounded-lg flex items-center justify-center mx-auto mb-4'>
-              <Link href="/" className="flex items-center gap-2 rounded-lg w-20 h-20 bg-primary rounded-lg justify-center">
+              <Link href="/" className="flex items-center gap-2 rounded-lg w-10 h-10 bg-primary rounded-lg justify-center">
             {/* <span className="text-primary-foreground font-bold text-lg">C</span> */}
             <Image src={Logo} alt={"Brain Logo"} className="object-fit"/>
         </Link>

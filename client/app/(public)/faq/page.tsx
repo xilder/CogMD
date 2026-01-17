@@ -1,5 +1,5 @@
-import Header from "@/components/header"
 import Footer from "@/components/footer"
+import Header from "@/components/header"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export default function FAQPage() {
@@ -7,7 +7,7 @@ export default function FAQPage() {
     {
       question: "What is CognitoMD?",
       answer:
-        "CognitoMD is a free, evidence-based study platform designed specifically for international medical graduates (IMGs) preparing for the UK's Professional and Linguistic Assessments Board (PLAB) exam. Our mission is to make high-quality medical education accessible to everyone.",
+        "CognitoMD is a free, evidence-based study platform designed specifically for international medical doctors (IMGs) preparing for the UK's Professional and Linguistic Assessments Board (PLAB) exam. Our mission is to make high-quality medical education accessible to everyone.",
     },
     {
       question: "How does the learning system work?",
