@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const optionA = searchParams.get("a") || "Phrenic nerve";
   const optionB = searchParams.get("b") || "Vagus nerve";
   const optionC = searchParams.get("c") || "Spinal nerve";
-  const optionD = searchParams.get("d") || "Hypoglossal nerve";
+  const optionD = searchParams.get("d") || "Hypoglossal nerve ";
   const optionE = searchParams.get("e") || "Facial nerve";
   const difficulty = searchParams.get("difficulty") || "medium";
   const course = searchParams.get("specialty") || "anatomy";
