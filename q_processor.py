@@ -25,7 +25,6 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 # ====================================================
 # CONFIG
 # ====================================================
-API_KEY = "AIzaSyCsxOFaH-g3BjAtmMckpuXJLNdY3Gct_d4"
 INPUT_FILE = "unprocessed_questions_file.json"
 OUTPUT_FILE = "output.json"
 REMAINING_FILE = "remaining_file.json"
@@ -229,7 +228,7 @@ TRANSFORMATION REQUIREMENTS
 2. **EXPLANATION (Markdown)**:
    - Use bold headings: **## Diagnosis** and **## Distractors**. Also use bullet points and newlines where necessary to improve readability
    - Justify the correct answer and explain why EACH distractor is wrong.
-   - Source authority: NICE CKS / GMC Guidelines else null.
+   - Source authority: NICE CKS / GMC Guidelines else null. Add a link to the guideline if possible, but more importantly, make sure the link is correct.
 
 3. **SUMMARY (Monograph)**:
    - Create a Markdown structured note with bullet points and newlines where necessary to improve readability.
@@ -242,6 +241,7 @@ TRANSFORMATION REQUIREMENTS
      * Any other relevant subtopic
 
 4. **TAGGING**:
+   - all abbreviations must be expanded at first mention before any subsequent use of the abbreviation. 
    - **related_topics**: 1–10 medically correct curriculum topics and searchable keywords.
    - **related_terms**: 5–10 key medical terms/anatomy/diagnoses.
    - **hint**: 1–2 sentences, Socratic style (do not give the answer away).
