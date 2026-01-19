@@ -194,6 +194,20 @@ export type QuizQuestion = {
   needs_review?: boolean;
 };
 
+export type QuestionImageResponse = {
+    id: string,
+    question_text: string,
+    options: OptionsImageResponse[],
+    explanation: string | null
+    type: string | null,
+    hint: string | null
+    correct_option: string | null
+}
+
+export type OptionsImageResponse = {
+  option_text: string
+}
+
 export type SessionResponse = {
   /** Type for the response when a session's questions are requested. */
   session_id: string | null;

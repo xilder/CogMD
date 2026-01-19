@@ -61,6 +61,7 @@ export const SERVER = {
   GET_ANSWER: (question_id: string) =>
     `${BASE_PATHS.QUIZ}/questions/${question_id}/feedback`,
   GET_RESULT: (session_id: string) => `${BASE_PATHS.QUIZ}/results/${session_id}`,
+  GET_QUESTION_FOR_IMAGE: `${BASE_PATHS.QUIZ}/get-image`,
 
   // --- Public Routes ---  
   CONTACT_US: '/contact-us',

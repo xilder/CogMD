@@ -1,14 +1,16 @@
 # app/api/quiz_router.py
 
+import os
 import uuid
 from os import error
 from pprint import pprint
 from typing import Annotated, Any, cast
 from urllib import response
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Response
 from postgrest import APIResponse
 from supabase import AsyncClient
+import requests
 
 # Import the correct, full dependency functions and new schemas
 from server.core.dependencies import get_current_user
@@ -19,6 +21,8 @@ from server.models.schemas import (
     NewSessionRequest,
     ProgressUpdateResponse,
     QuestionFeedbackResponse,
+    QuestionForImageParams,
+    QuestionResponse,
     SessionCreateResponse,
     SessionResponse,
     TestResult,
@@ -261,8 +265,7 @@ async def submit_answer(
         response = await supabase.rpc("process_answer_submission", rpc_params).execute()
 
         if not response.data:
-            pprint(
-                    response.data["error"])
+            pprint(response.data["error"])
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=(
@@ -316,7 +319,7 @@ async def delete_quiz_session(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )        
+        )
 
 
 @router.get("/sessions/{session_id}/resume", response_model=SessionResponse)
@@ -406,13 +409,16 @@ async def get_question_feedback(
 
 
 @router.get("/results/{session_id}", response_model=list[TestResult])
-async def get_session_result(session_id: uuid.UUID, supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
-    current_user=Depends(get_current_user)):
+async def get_session_result(
+    session_id: uuid.UUID,
+    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+    current_user=Depends(get_current_user),
+):
     """"""
     try:
         rpc_params = {
             "p_session_id": str(session_id),
-            "p_user_id": str(current_user.id)
+            "p_user_id": str(current_user.id),
         }
         response = await supabase.rpc("get_session_results", rpc_params).execute()
 
@@ -420,10 +426,68 @@ async def get_session_result(session_id: uuid.UUID, supabase: Annotated[AsyncCli
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Could not retrieve session result.",
-            ) 
+            )
         return response.data
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
+
+# @router.get("/get-image")
+# async def get_image(
+#     supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+#     question_for_image_params: QuestionForImageParams,
+# ):
+#     image_url = f'{os.environ.get("ORIGIN_URL", "")}/api/os'
+#     try:
+#         rpc_params = {
+#             "p_tag_id": question_for_image_params.tag_id,
+#             "p_question_id": question_for_image_params.tag_id,
+#         }
+#         response = await supabase.rpc("get_question_for_image", rpc_params).execute()
+#         if not response.data:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail="Could not retrieve session result.",
+#             )
+#         params = {
+#             "question_text": response.data.question_text,
+#             "id": response.data.id,
+#             'a': response.data.options[0].option_text,
+#             'b': response.data.options[1].option_text,
+#             'c': response.data.options[2].option_text,
+#             'd': response.data.options[3].option_text,
+#             'e': response.data.options[4].option_text,
+#         }
+
+#         file_name = f"{uuid.uuid4()}.png"
+
+#         image = await fetch_og_image(image_url, file_name, params)
+            
+#         return Response(content=image, media_type="image", headers={"Content-Disposition": f"attachment; filename='{file_name}"}) 
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+#         )
+
+# async def fetch_og_image(image_url, output_filename, params=None):
+
+#     headers = {
+#         'User-Agent': 'Python-OG-Fetcher/1.0'    }
+    
+#     try:
+#         print(f"Requesting Image from: {image_url}")
+#         response = requests.get(image_url, params=params, headers=headers, stream=True, timeout=10000)
+#         response.raise_for_status()
+
+#         with open(output_filename, 'wb') as f:
+#             for chunk in response.iter_content(chunk_size=8192):
+#                 f.write(chunk)
+
+#             print("Success!")
+#         return response.content
+#     except requests.exceptions.HTTPError as err:
+#         print(f"HTTP Error: {err}")
+#     except Exception as err:
+#         print(f"An Error: {err}")

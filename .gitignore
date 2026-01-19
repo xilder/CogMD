@@ -34,3 +34,5 @@ next-env.d.ts
 **/**.log
 **/logs/
 /**.json
+/**.py
+/q_processor.py

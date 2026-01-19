@@ -11,6 +11,7 @@ import {
   NewSessionRequest,
   OAuthCallback,
   QuestionFeedbackResponse,
+  QuestionImageResponse,
   SessionCreateResponse,
   SessionResponse,
   TestResult,
@@ -275,6 +276,15 @@ export const getAnswer = async (question_id: string) => {
   );
   return data;
 };
+
+export const getQuestionForImage = async (tag_id?: string, question_id?: string, specialty?: string) => {
+  const params: { tag_id?: string; question_id?: string } = {};
+  if (tag_id) params['tag_id'] = tag_id;
+  if (question_id) params['question_id'] = question_id;
+
+  const { data } = await api.post<QuestionImageResponse>(SERVER.GET_QUESTION_FOR_IMAGE, params)
+  return data
+}
 
 // --- NEW Dashboard Function ---
 

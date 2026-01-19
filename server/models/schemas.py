@@ -217,12 +217,21 @@ class OptionResponse(BaseModel):
     option_text: str
 
 
+class QuestionForImageParams(BaseModel):
+    tag_id: str | None = None
+    question_id: str | None = None
+
+
 class QuestionResponse(BaseModel):
     """A public-facing model for a question, including its options."""
 
     id: uuid.UUID
     question_text: str
     options: list[dict[str, str]]
+    explanation: str | None = None
+    type: str | None = None  # 'new' or 'review'
+    hint: str | None = None
+    correct_option: uuid.UUID | None = None
 
 
 class SessionResponse(BaseModel):
