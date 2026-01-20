@@ -3,8 +3,8 @@ import logging.config
 import os
 import uuid
 from typing import Annotated
-import httpx
 
+import httpx
 import requests
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Response, status
@@ -121,14 +121,13 @@ async def get_image(
             "c": data["options"][2]["option_text"],
             "d": data["options"][3]["option_text"],
             "e": data["options"][4]["option_text"],
-            "specialty": data["specialty"]
-        }
+            "specialty": ",".join(data["specialty"]) if data["specialty"] else "",
+            "difficulty": data["difficulty"],
+            }
 
-        # 4. Fetch Image (Async)
         download_filename = f"{data.get('id', 'image')}.png" 
         image_bytes = await fetch_og_image_async(image_url, params)
 
-        # 5. Return Response
         return Response(
             content=image_bytes,
             media_type="image/png", 
@@ -138,8 +137,10 @@ async def get_image(
         )
 
     except httpx.HTTPStatusError as e:
+        print(e)
         raise HTTPException(status_code=502, detail=f"Failed to generate image from upstream: ({str(e)})")
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 

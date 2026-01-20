@@ -44,6 +44,11 @@ export const COURSE_COLORS: Record<string, CourseConfig> = {
     color: "#06b6d4", // Cyan
     bgColor: "#cffafe",
   },
+  psychiatry: {
+    label: "Psychiatry",
+    color: "#ec4899", // Pink
+    bgColor: "#fce7f3",
+  },
   "child and adolescent psychiatry": {
     label: "Child And Adolescent Psychiatry",
     color: "#ec4899", // Pink
@@ -340,6 +345,8 @@ export const COURSE_COLORS: Record<string, CourseConfig> = {
 // }
 
 export function getCourseColor(course: string = "anatomy"): CourseConfig {
+  if (!COURSE_COLORS[course.toLowerCase()])
+    return { label: course, color: "#000000", bgColor: "#ffffff" };
   return COURSE_COLORS[course.toLowerCase()] || COURSE_COLORS.anatomy;
 }
 
@@ -351,4 +358,41 @@ export function getContrastColor(bgColor: string): string {
   const b = parseInt(color.substr(4, 2), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness > 128 ? "#000000" : "#ffffff";
+}
+
+export function getDifficultyConfig(level: number) {
+  switch (Number(level)) {
+    case 1:
+      return {
+        label: "Recall",
+        color: "#16a34a", // Green-600
+        bgColor: "#dcfce7", // Green-100
+      };
+    case 2:
+      return {
+        label: "Understanding",
+        color: "#0891b2", // Cyan-600
+        bgColor: "#cffafe", // Cyan-100
+      };
+    case 3:
+      return {
+        label: "Application",
+        color: "#ca8a04", // Yellow-600
+        bgColor: "#fef9c3", // Yellow-100
+      };
+    case 4:
+      return {
+        label: "Analysis",
+        color: "#ea580c", // Orange-600
+        bgColor: "#ffedd5", // Orange-100
+      };
+    case 5:
+      return {
+        label: "Complex Reasoning",
+        color: "#dc2626", // Red-600
+        bgColor: "#fee2e2", // Red-100
+      };
+    default:
+      return null
+  }
 }

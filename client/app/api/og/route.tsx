@@ -1,6 +1,8 @@
 import { Logo } from "@/components/backend-logo";
-import { getCourseColor } from "@/lib/og-utils";
+import { getCourseColor, getDifficultyConfig } from "@/lib/og-utils";
+import fs from "fs";
 import { ImageResponse } from "next/og";
+import path from "path";
 
 export const runtime = "nodejs";
 
@@ -15,14 +17,16 @@ export async function GET(request: Request) {
   const optionC = searchParams.get("c") || "Spinal nerve";
   const optionD = searchParams.get("d") || "Hypoglossal nerve ";
   const optionE = searchParams.get("e") || "Facial nerve";
-  const difficulty = searchParams.get("difficulty") || "medium";
-  const course = searchParams.get("specialty") || "anatomy";
+  const _difficulty = searchParams.get("difficulty") || null;
+  const difficulty = _difficulty
+    ? getDifficultyConfig(parseInt(_difficulty))
+    : null;
+  const courses = searchParams.get("specialty")?.split(",") || [];
 
-  // const diffConfig = getDifficultyColor(difficulty);
-  const courseConfig = getCourseColor(course);
-  const imageBuffer = await fetch(
-    new URL("../../../public/brain-white.png", import.meta.url),
-  ).then((res) => res.arrayBuffer());
+  const courseConfigs = courses.map((course) => getCourseColor(course));
+  const filePath = path.join(process.cwd(), "public", "brain-white.png");
+  const nodeBuffer = fs.readFileSync(filePath);
+  const imageBuffer = Uint8Array.from(nodeBuffer).buffer;
 
   return new ImageResponse(
     <div
@@ -37,52 +41,19 @@ export async function GET(request: Request) {
         border: "4px solid #000000",
       }}
     >
-      {/* Watermark */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          fontSize: "120px",
-          fontWeight: "bold",
-          color: "rgba(0, 0, 0, 0.04)",
-          zIndex: 0,
-        }}
-      >
-        CognitoMD
-      </div>
-
       {/* Header */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "32px 48px",
+          padding: "16px 48px",
           borderBottom: "4px solid #000000",
           background: "#fafafa",
-          zIndex: 10,
+          zIndex: 5,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {/* <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '0px',
-                background: '#000000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '18px',
-                border: '2px solid #000000',
-              }}
-            >
-              M
-            </div> */}
           <Logo imageBuffer={imageBuffer} />
           <span
             style={{
@@ -103,51 +74,41 @@ export async function GET(request: Request) {
             alignItems: "center",
           }}
         >
-          <div
+          {/* {difficulty && (
+            <div
             style={{
               padding: "6px 12px",
               borderRadius: "0px",
               background: "#fafafa",
               fontSize: "11px",
-              color: "#000000",
+              color: difficulty.color,
               fontWeight: "700",
-              border: "3px solid #000000",
+              border: `3px solid ${difficulty.color}`,
               textTransform: "uppercase",
               letterSpacing: "1px",
             }}
           >
-            Medical Quiz
+            {difficulty.label}
           </div>
-          {/* <div
-            style={{
-              padding: "6px 12px",
-              borderRadius: "0px",
-              background: "#fafafa",
-              fontSize: "11px",
-              color: diffConfig.color,
-              fontWeight: "700",
-              border: `3px solid ${diffConfig.color}`,
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-            }}
-          >
-            {diffConfig.label}
-          </div> */}
-          <div
-            style={{
-              padding: "6px 12px",
-              borderRadius: "0px",
-              background: "#fafafa",
-              fontSize: "11px",
-              color: courseConfig.color,
-              fontWeight: "700",
-              border: `3px solid ${courseConfig.color}`,
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-            }}
-          >
-            {courseConfig.label}
-          </div>
+          )} */}
+          {courseConfigs.map((courseConfig) => (
+            <div
+              key={courseConfig.label}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "0px",
+                background: "#fafafa",
+                fontSize: "11px",
+                color: courseConfig.color,
+                fontWeight: "700",
+                border: `3px solid ${courseConfig.color}`,
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
+            >
+              {courseConfig.label}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -157,7 +118,6 @@ export async function GET(request: Request) {
           display: "flex",
           flex: 1,
           position: "relative",
-          zIndex: 5,
         }}
       >
         {/* Left Side - Question */}
@@ -238,9 +198,7 @@ export async function GET(request: Request) {
               >
                 {option.letter}
               </span>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                {option.text}
-              </span>
+              <span>{option.text}</span>
             </div>
           ))}
         </div>
@@ -262,6 +220,22 @@ export async function GET(request: Request) {
         }}
       >
         cognitomd.vercel.app
+      </div>
+
+      {/* Watermark */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          fontSize: "120px",
+          fontWeight: "bold",
+          color: "rgba(0, 0, 0, 0.05)",
+          zIndex: 100,
+        }}
+      >
+        COGNITOMD
       </div>
     </div>,
     {

@@ -434,60 +434,60 @@ async def get_session_result(
         )
 
 
-@router.get("/get-image")
-async def get_image(
-    supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
-    question_for_image_params: QuestionForImageParams,
-):
-    image_url = f'{os.environ.get("ORIGIN_URL", "")}/api/os'
-    try:
-        rpc_params = {
-            "p_tag_id": question_for_image_params.tag_id,
-            "p_question_id": question_for_image_params.tag_id,
-        }
-        response = await supabase.rpc("get_question_for_image", rpc_params).execute()
-        if not response.data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Could not retrieve session result.",
-            )
-        params = {
-            "question_text": response.data.question_text,
-            "id": response.data.id,
-            'a': response.data.options[0].option_text,
-            'b': response.data.options[1].option_text,
-            'c': response.data.options[2].option_text,
-            'd': response.data.options[3].option_text,
-            'e': response.data.options[4].option_text,
-        }
+# @router.get("/get-image")
+# async def get_image(
+#     supabase: Annotated[AsyncClient, Depends(get_supabase_client)],
+#     question_for_image_params: QuestionForImageParams,
+# ):
+#     image_url = f'{os.environ.get("ORIGIN_URL", "")}/api/os'
+#     try:
+#         rpc_params = {
+#             "p_tag_id": question_for_image_params.tag_id,
+#             "p_question_id": question_for_image_params.tag_id,
+#         }
+#         response = await supabase.rpc("get_question_for_image", rpc_params).execute()
+#         if not response.data:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail="Could not retrieve session result.",
+#             )
+#         params = {
+#             "question_text": response.data.question_text,
+#             "id": response.data.id,
+#             'a': response.data.options[0].option_text,
+#             'b': response.data.options[1].option_text,
+#             'c': response.data.options[2].option_text,
+#             'd': response.data.options[3].option_text,
+#             'e': response.data.options[4].option_text,
+#         }
 
-        file_name = f"{uuid.uuid4()}.png"
+#         file_name = f"{uuid.uuid4()}.png"
 
-        image = await fetch_og_image(image_url, file_name, params)
+#         image = await fetch_og_image(image_url, file_name, params)
             
-        return Response(content=image, media_type="image", headers={"Content-Disposition": f"attachment; filename='{file_name}"}) 
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+#         return Response(content=image, media_type="image", headers={"Content-Disposition": f"attachment; filename='{file_name}"}) 
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+#         )
 
-async def fetch_og_image(image_url, output_filename, params=None):
+# async def fetch_og_image(image_url, output_filename, params=None):
 
-    headers = {
-        'User-Agent': 'Python-OG-Fetcher/1.0'    }
+#     headers = {
+#         'User-Agent': 'Python-OG-Fetcher/1.0'    }
     
-    try:
-        print(f"Requesting Image from: {image_url}")
-        response = requests.get(image_url, params=params, headers=headers, stream=True, timeout=10000)
-        response.raise_for_status()
+#     try:
+#         print(f"Requesting Image from: {image_url}")
+#         response = requests.get(image_url, params=params, headers=headers, stream=True, timeout=10000)
+#         response.raise_for_status()
 
-        with open(output_filename, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
+#         with open(output_filename, 'wb') as f:
+#             for chunk in response.iter_content(chunk_size=8192):
+#                 f.write(chunk)
 
-            print("Success!")
-        return response.content
-    except requests.exceptions.HTTPError as err:
-        print(f"HTTP Error: {err}")
-    except Exception as err:
-        print(f"An Error: {err}")
+#             print("Success!")
+#         return response.content
+#     except requests.exceptions.HTTPError as err:
+#         print(f"HTTP Error: {err}")
+#     except Exception as err:
+#         print(f"An Error: {err}")

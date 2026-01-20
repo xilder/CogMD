@@ -232,6 +232,8 @@ class QuestionResponse(BaseModel):
     type: str | None = None  # 'new' or 'review'
     hint: str | None = None
     correct_option: uuid.UUID | None = None
+    difficulty: int | None = None
+    explanation: str | None = None
 
 
 class SessionResponse(BaseModel):
