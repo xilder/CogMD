@@ -95,7 +95,7 @@ async def get_image(
 ):
     # 1. Construct URL
     origin = os.environ.get("ORIGIN_URL", "localhost:3000")
-    image_url = f'http://{origin}/api/og'
+    image_url = f'{origin}/api/og'
 
     try:
         # 2. Get Data from Supabase
